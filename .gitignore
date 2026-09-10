@@ -1,0 +1,14 @@
+# Hugo build outputs
+public/
+resources/_gen/
+.hugo_build.lock
+
+# Local development logs and OS artifacts
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+*.bak
+
