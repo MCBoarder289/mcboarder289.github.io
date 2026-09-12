@@ -67,3 +67,6 @@ publishes the contents of `public/` (or configure a GitHub Actions workflow
 to run `hugo --gc --minify` and deploy the output) — see the [Blowfish
 hosting docs](https://blowfish.page/docs/hosting-deployment/) for
 GitHub Pages-specific setup if a workflow hasn't been added yet.
+
+## Notes
+* Background image generated at: https://bgjar.com/hexagon

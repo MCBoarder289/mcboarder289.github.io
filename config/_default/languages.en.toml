@@ -17,7 +17,7 @@ title = "Michael Chapman"
 [params.author]
   name = "Michael Chapman"
   # email = "youremail@example.com"
-  image = "img/blowfish_logo.png"
+  image = "img/headshot.jpg"
   imageQuality = 96
   headline = "Software engineer, tinkerer, and lifelong learner"
   bio = "Welcome to my personal blog, devlog, and profile."
