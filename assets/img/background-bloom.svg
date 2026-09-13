@@ -1,5 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
      xmlns:svgjs="http://svgjs.dev/svgjs" width="1440" height="560" preserveAspectRatio="none" viewBox="0 0 1440 560">
+    <defs>
+        <radialGradient id="bloomPrimary" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#4a9ef0" stop-opacity=".7"/>
+            <stop offset="1" stop-color="#4a9ef0" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="bloomSecondary" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#f0705a" stop-opacity=".6"/>
+            <stop offset="1" stop-color="#f0705a" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="bloomViolet" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#7c3aed" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="bloomBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="30"/>
+        </filter>
+    </defs>
+    <g filter="url(#bloomBlur)">
+        <circle cx="300" cy="220" r="220" fill="url(#bloomPrimary)"></circle>
+        <circle cx="1100" cy="360" r="260" fill="url(#bloomSecondary)"></circle>
+        <circle cx="780" cy="180" r="170" fill="url(#bloomViolet)" opacity=".9"></circle>
+    </g>
     <g mask="url(&quot;#SvgjsMask1009&quot;)" fill="none">
         <path d="M175.73 160.32L240.68 197.82L240.68 272.82L175.73 310.32L110.77 272.82L110.77 197.82zM370.59 47.82L435.54 85.32L435.54 160.32L370.59 197.82L305.63 160.32L305.63 85.32zM370.59 272.82L435.54 310.32L435.54 385.32L370.59 422.82L305.63 385.32L305.63 310.32zM305.63 385.32L370.59 422.82L370.59 497.82L305.63 535.32L240.68 497.82L240.68 422.82zM435.54 160.32L500.5 197.82L500.5 272.82L435.54 310.32L370.59 272.82L370.59 197.82zM500.5 272.82L565.45 310.32L565.45 385.32L500.5 422.82L435.54 385.32L435.54 310.32zM760.31 47.82L825.27 85.32L825.27 160.32L760.31 197.82L695.36 160.32L695.36 85.32zM1409.85 497.82L1474.8 535.32L1474.8 610.32L1409.85 647.82L1344.89 610.32L1344.89 535.32zM1539.76 47.82L1604.71 85.32L1604.71 160.32L1539.76 197.82L1474.8 160.32L1474.8 85.32zM1474.8 385.32L1539.76 422.82L1539.76 497.82L1474.8 535.32L1409.85 497.82L1409.85 422.82z"
               stroke="#03305d" stroke-width="2"></path>

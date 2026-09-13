@@ -7,7 +7,7 @@
 
 colorScheme = "burufugu"
 defaultAppearance = "dark" # valid options: light or dark
-autoSwitchAppearance = true
+autoSwitchAppearance = false # force defaultApperance first
 
 enableA11y = false
 enableSearch = true
@@ -25,7 +25,7 @@ disableImageOptimizationMD = false
 disableTextInHeader = false
 # backgroundImageWidth = 1200
 
-defaultBackgroundImage = "img/background.svg" # used as default for background images
+defaultBackgroundImage = "img/background-bloom.svg" # used as default for background images
 # backgroundCanvas = true # render defaultBackgroundImage as a fixed backdrop on every page
 # defaultFeaturedImage = "IMAGE.jpg" # used as default for featured images in all articles
 # defaultSocialImage = "/android-chrome-512x512.png" # used as default for social media sharing (Open Graph and Twitter)
