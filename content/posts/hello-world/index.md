@@ -28,7 +28,7 @@ Olim hic ubi Rhesum proceres annis, cratera labitur usu luminis Ixione. Ut
 nomina, onusque obuncis piae huic perque fama toto fugat quoquam dixerunt
 adversum corpora, non meae? Primus offensa transit; manebant vacuus.
 
-## Nomen sinit Minos erat
+### Nomen sinit Minos erat
 
 Invenio `graymail_clock_page` sit; sic in nec Samos progenies **vitiaverat**
 adhuc, molle diu fraterna suum, virginitate impune distendens. Aeneadae vitae.
@@ -91,7 +91,7 @@ heu leones petitum corporis quaesitique Priami corpus ferisne Picus. Negarem
 telum periuria ignotas reformatus necem fert cum antra procerum molliri nulli
 ruit.
 
-## Emicat dextra ferens ferebant
+### Emicat dextra ferens ferebant
 
 Rex neve et, foret triste [mactatarumque](#emicat-dextra-ferens-ferebant), quid
 probavit tibi dominos, huic tum pocula, et. Via laniarat Medea: pinguia cum
@@ -99,7 +99,7 @@ sonum erat nostris, silva in cerno mille sorores loris, nata bimari, est. Nam
 terram edere populusque, deus oculis delusa dixisse tot figuras ceu ubi, fuit
 inopes memores vultibus, praebere.
 
-## Dura quoque simulacraque tibia
+#### Dura quoque simulacraque tibia
 
 [Pulchra mediis furoris](#nomen-sinit-minos-erat) quam non quodcumque novissima
 ferre si amare aper? Plenis rapiunt in otia quoque laudaverit sedes tunicis,

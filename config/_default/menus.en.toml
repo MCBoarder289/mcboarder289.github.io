@@ -26,6 +26,11 @@
   pageRef = "tags"
   weight = 30
 
+[[main]]
+  name = "Categories"
+  parent = "Blog"
+  pageRef = "categories"
+  weight = 40
 
 
 [[main]]
@@ -60,23 +65,24 @@
 #  pageRef = "categories/awesome"
 #  weight = 20
 
-#[[main]]
-#  name = "Categories"
-#  pageRef = "categories"
-#  weight = 20
-
 
 # -- Footer Menu --
 # The footer menu is displayed at the bottom of the page, just before
 # the copyright notice. Configure as per the main menu above.
 
 
-# [[footer]]
-#   name = "Tags"
-#   pageRef = "tags"
-#   weight = 10
+[[footer]]
+ name = "Tags"
+ pageRef = "tags"
+ weight = 10
 
-# [[footer]]
-#   name = "Categories"
-#   pageRef = "categories"
-#   weight = 20
+[[footer]]
+ name = "Categories"
+ pageRef = "categories"
+ weight = 15
+
+[[footer]]
+ name = "About"
+ pageRef = "about"
+ weight = 20
+

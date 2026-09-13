@@ -68,11 +68,11 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   layout = "background" # valid options: page, profile, hero, card, background, landing, custom
   # layoutSwitcher = false # opt-in interactive preview of the built-in layouts
   #homepageImage = "IMAGE.jpg" # used in: hero, and card
-  showRecent = false
+  showRecent = true
   showRecentItems = 5
-  showMoreLink = false
+  showMoreLink = true
   showMoreLinkDest = "/posts/"
-  cardView = false
+  cardView = true
   cardViewScreenWidth = false
   layoutBackgroundBlur = true # only used when layout equals background
   disableHeroImageFilter = false # only used when layout equals hero
@@ -99,14 +99,14 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   showPagination = true
   invertPagination = false
   showReadingTime = true
-  showReadingProgress = false
+  showReadingProgress = true
   showTableOfContents = true
   # showRelatedContent = false
   # relatedContentLimit = 3
-  showTaxonomies = false # Enable the display of taxonomies for the related article.
+  showTaxonomies = true # Enable the display of taxonomies for the related article.
   showCategories = true # These will show if showTaxonomies is true.
   showTags = true # These will show if showTaxonomies is true.
-  showCategoriesInSecondaryColor = false # This will change the color of category badges, so the user can better distinguish between the two. Only if showTaxonomies is true.
+  showCategoriesInSecondaryColor = true # This will change the color of category badges, so the user can better distinguish between the two. Only if showTaxonomies is true.
   showAuthorsBadges = false
   showWordCount = true
   # sharingLinks = [ "linkedin", "twitter", "bluesky", "mastodon", "reddit", "pinterest", "facebook", "email", "whatsapp", "telegram", "line"]
@@ -130,6 +130,7 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   cardView = true
   cardViewScreenWidth = false
   constrainItemsWidth = false
+  showFooter = true
 
 [sitemap]
   excludedKinds = ["taxonomy", "term"]
@@ -145,6 +146,7 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   showLikes = false
   showTableOfContents = false
   cardView = false
+  showFooter = true
 
 [term]
   showHero = true
@@ -158,6 +160,7 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   groupByYear = false
   cardView = false
   cardViewScreenWidth = false
+  showFooter = true
 
 [firebase]
   # apiKey = "XXXXXX"
