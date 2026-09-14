@@ -21,6 +21,12 @@
   weight = 15
 
 [[main]]
+  name = "Series"
+  parent = "Blog"
+  pageRef = "series"
+  weight = 20
+
+[[main]]
   name = "Tags"
   parent = "Blog"
   pageRef = "tags"
@@ -31,7 +37,6 @@
   parent = "Blog"
   pageRef = "categories"
   weight = 40
-
 
 [[main]]
   name = "About"

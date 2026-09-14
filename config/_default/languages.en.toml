@@ -19,8 +19,8 @@ title = "Michael Chapman"
   # email = "youremail@example.com"
   image = "img/headshot.jpg"
   imageQuality = 96
-  headline = "Software engineer, tinkerer, and lifelong learner"
-  bio = "Welcome to my personal blog, devlog, and profile."
+  headline = "Data + Software Engineer, Educator, and Lifelong Learner"
+  bio = "Data + Software Engineer, Educator, and Lifelong Learner"
   links = [
     { github = "https://github.com/mcboarder289" },
   # Uncomment/add more entries above (inside the links array) as needed. Reference list of supported platforms:
