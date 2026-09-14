@@ -1,7 +1,7 @@
 ---
 title: "Data Profiling with Spark"
 date: 2026-09-13
-summary: "The first post on my new Hugo + Blowfish powered blog/devlog."
+summary: "Walkthrough of my open source contributions to fg-data-profiling, a library that implements data profiling at scale with Spark."
 tags: ["spark", "data engineering", ""]
 categories: ["open source"]
 featureimage: "spark_plus_profiling.jpg"
