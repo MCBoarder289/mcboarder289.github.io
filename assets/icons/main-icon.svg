@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Icon Container Background with Rounded Corners -->
+  <rect width="100%" height="100%" rx="16" fill="#1e1e2e" />
+
+  <!-- Concentric Inner Decorative Hexagon -->
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" fill="none" stroke="#cdd6f4" stroke-width="2" stroke-linejoin="round" opacity="0.3" />
+
+  <!-- Outer Sharp Geometric Hexagon -->
+  <polygon points="50,15 80,32.5 80,67.5 50,85 20,67.5 20,32.5" fill="none" stroke="#89b4fa" stroke-width="4" stroke-linejoin="round" />
+
+  <!-- Centered Devlog Typography Element -->
+  <g transform="translate(50, 50)">
+    <!-- Terminal Forward Slash / -->
+    <text x="-4" y="0" fill="#f5c2e7" font-family="monospace" font-weight="bold" font-size="24" text-anchor="middle" dominant-baseline="central">/</text>
+    <!-- Terminal Static Cursor Box -->
+    <rect x="6" y="-7" width="8" height="16" fill="#a6e3a1" />
+  </g>
+</svg>
