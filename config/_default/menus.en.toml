@@ -11,6 +11,11 @@
 # ordered by weight from lowest to highest.
 
 [[main]]
+  name = "Projects"
+  weight = 5
+  pageref = "projects"
+
+[[main]]
   name = "Blog"
   weight = 10
 

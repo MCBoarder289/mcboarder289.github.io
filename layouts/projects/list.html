@@ -1,0 +1,29 @@
+{{ define "main" }}
+<main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+
+  <!-- Header Title -->
+  <header class="mb-8">
+    <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-neutral-100 mb-2">
+      {{ .Title }}
+    </h1>
+    {{ with .Description }}
+      <p class="text-lg text-neutral-500 dark:text-neutral-400">{{ . }}</p>
+    {{ end }}
+  </header>
+
+  <!-- This forces Hugo to read the body of your _index.md and process your shortcode -->
+  {{ if .Content }}
+    <div class="mb-8 prose dark:prose-invert max-w-none">
+      {{ .Content }}
+    </div>
+  {{ end }}
+
+  <!-- Clean Grid Wrapper matching Blowfish design -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {{ range .Pages }}
+      {{ partial "article-link/card.html" . }}
+    {{ end }}
+  </div>
+
+</main>
+{{ end }}
