@@ -204,6 +204,6 @@ Clearly there are some *glaring* differences in the output.
 > * Most of the descriptive stats in Spark are `nan` or far off from pandas
 > * The missing count in Spark shows `310`, but we know there are only `100` missing values
 
-So now that we clearly have a small, controlled dataset as our baseline and these observed failures,
+So now that we have a small, controlled dataset as our baseline, and we have these observed failures,
 we can now dig into the source code and figure out what needs to be fixed.
 
