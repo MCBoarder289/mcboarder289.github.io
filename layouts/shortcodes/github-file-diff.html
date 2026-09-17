@@ -15,13 +15,14 @@
   {{ end }}
 
   {{ if $foundDiff }}
-    <!-- Wrapper to structure the block like GitHub's UI -->
-    <div class="github-unified-diff-box border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden my-6">
-      <div class="diff-header bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 flex justify-between items-center">
+    <div class="gh-diff-container border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden my-6">
+      <!-- Top Title Bar -->
+      <div class="gh-diff-header bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 flex justify-between items-center">
         <span>📄 {{ $file }}</span>
         <a href="https://github.com/{{ $repo }}/pull/{{ $pr }}/files" target="_blank" class="text-xs text-primary-500 hover:underline">View on GitHub &rarr;</a>
       </div>
-      <div class="diff-body text-xs leading-relaxed font-mono overflow-x-auto">
+      <!-- Code Block Surface -->
+      <div class="gh-diff-body text-sm p-4 overflow-x-auto bg-neutral-50 dark:bg-neutral-900">
         {{ transform.Highlight $foundDiff "diff" }}
       </div>
     </div>
