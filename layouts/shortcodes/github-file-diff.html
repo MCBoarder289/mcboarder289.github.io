@@ -19,11 +19,49 @@
       <!-- Top Title Bar -->
       <div class="gh-diff-header bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 flex justify-between items-center">
         <span>📄 {{ $file }}</span>
-        <a href="https://github.com/{{ $repo }}/pull/{{ $pr }}/files" target="_blank" class="text-xs text-primary-500 hover:underline">View on GitHub &rarr;</a>
+        <a href="https://github.com{{ $repo }}/pull/{{ $pr }}/files" target="_blank" class="text-xs text-primary-500 hover:underline">View on GitHub &rarr;</a>
       </div>
-      <!-- Code Block Surface with inline line numbers enabled -->
+      <!-- Code Block Surface -->
       <div class="gh-diff-body text-sm p-4 overflow-x-auto bg-neutral-50 dark:bg-neutral-900">
-        {{ transform.Highlight $foundDiff "diff" "lineNos=inline" }}
+        {{ $hunks := split $foundDiff "@@" }}
+
+        {{ $firstHunk := index $hunks 0 }}
+        {{ if ge (len (trim $firstHunk " \n")) 1 }}
+          {{ transform.Highlight $firstHunk "diff" "lineNos=false" }}
+        {{ end }}
+
+        {{ range $index, $element := $hunks }}
+          {{ if and ($index) (modBool $index 2) }}
+            {{ $hunkHeader := index $hunks (sub $index 1) }}
+            {{ $fullHunkHeader := print "@@" $hunkHeader "@@" }}
+
+            {{ $rightSide := index (split $hunkHeader "+") 1 }}
+            {{ $startLineStr := index (split $rightSide ",") 0 }}
+            {{/* Shift start line -1 backward */}}
+            {{ $startLine := sub (int (trim $startLineStr " ")) 1 }}
+
+            <!-- Render hunk header row -->
+            {{ transform.Highlight $fullHunkHeader "diff" "lineNos=false" }}
+
+            <!-- Process the hunk content line-by-line to prevent counter drift -->
+            {{ $lines := split $element "\n" }}
+            {{ $currentLine := $startLine }}
+
+            {{ range $lines }}
+              {{ $line := . }}
+              {{ if ge (len $line) 1 }}
+                {{ if strings.HasPrefix $line "-" }}
+                  {{ transform.Highlight $line "diff" "lineNos=false" }}
+                {{ else }}
+                  {{ $options := print "lineNos=inline,lineNoStart=" $currentLine }}
+                  {{ transform.Highlight $line "diff" $options }}
+                  {{ $currentLine = add $currentLine 1 }}
+                {{ end }}
+              {{ end }}
+            {{ end }}
+
+          {{ end }}
+        {{ end }}
       </div>
     </div>
   {{ else }}
