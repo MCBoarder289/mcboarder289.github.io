@@ -1,0 +1,28 @@
+{{ $repo := .Get "repo" }}
+{{ $pr := .Get "pr" }}
+{{ $file := .Get "file" }}
+
+{{/* Build the URL securely using straightforward string combinations */}}
+{{ $url := print "https://github.com/" $repo "/pull/" $pr ".diff" }}
+{{ $remote := resources.GetRemote $url }}
+
+{{ if $remote }}
+  {{/* Cut the big diff block up based on git boundaries */}}
+  {{ $chunks := split $remote.Content "diff --git a/" }}
+
+  {{ $foundDiff := "" }}
+  {{ range $chunks }}
+    {{ if hasPrefix . $file }}
+      {{ $foundDiff = print "diff --git a/" . }}
+    {{ end }}
+  {{ end }}
+
+  {{/* Highlight the extracted segment */}}
+  {{ if $foundDiff }}
+    {{ transform.Highlight $foundDiff "diff" }}
+  {{ else }}
+    <p style="color:red;">Error: File path '{{ $file }}' not found in PR #{{ $pr }}</p>
+  {{ end }}
+{{ else }}
+  <p style="color:red;">Error: Could not retrieve diff from {{ $url }}</p>
+{{ end }}

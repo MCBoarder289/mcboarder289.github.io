@@ -197,8 +197,6 @@ spark_profile = ProfileReport(spark_df, title="Spark Profiling Report")
 
 pandas_profile.to_file("pandas_example.html")
 spark_profile.to_file("spark_example.html")
-
-
 ```
 
 ### Initial State - pandas
@@ -221,3 +219,4 @@ Clearly there are some *glaring* differences in the output.
 So now that we have a small, controlled dataset as our baseline, and we have these observed failures,
 we can now dig into the source code and figure out what needs to be fixed.
 
+{{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_numeric_spark.py" >}}
