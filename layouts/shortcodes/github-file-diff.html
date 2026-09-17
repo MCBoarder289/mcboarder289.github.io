@@ -2,6 +2,16 @@
 {{ $pr := .Get "pr" }}
 {{ $file := .Get "file" }}
 {{ $url := print "https://github.com/" $repo "/pull/" $pr ".diff" }}
+
+{{/* Check if a custom link override was manually provided */}}
+{{ $githubLink := .Get "link" }}
+
+{{/* If no custom link is provided, dynamically build the direct file anchor */}}
+{{ if not $githubLink }}
+  {{ $fileHash := sha256 $file }}
+  {{ $githubLink = print "https://github.com/" $repo "/pull/" $pr "/files#diff-" $fileHash }}
+{{ end }}
+
 {{ $remote := resources.GetRemote $url }}
 
 {{ if $remote }}
@@ -31,7 +41,7 @@
       <!-- Top Title Bar: Added flex-wrap and gap-2 for mobile responsiveness -->
       <div class="gh-diff-header bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 flex flex-wrap justify-between items-center gap-2">
       <span class="overflow-x-auto whitespace-nowrap scrollbar-thin min-w-0 pr-2">📄 {{ $file }}</span>
-        <a href="https://github.com/{{ $repo }}/pull/{{ $pr }}/files" target="_blank" class="text-xs text-primary-500 hover:underline shrink-0">View on GitHub &rarr;</a>
+        <a href="{{ $githubLink }}" target="_blank" class="text-xs text-primary-500 hover:underline shrink-0 whitespace-nowrap">View on GitHub &rarr;</a>
       </div>
 
       <!-- Code Block Surface -->
