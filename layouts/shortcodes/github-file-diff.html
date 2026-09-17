@@ -2,24 +2,29 @@
 {{ $pr := .Get "pr" }}
 {{ $file := .Get "file" }}
 
-{{/* Build the URL securely using straightforward string combinations */}}
 {{ $url := print "https://github.com/" $repo "/pull/" $pr ".diff" }}
 {{ $remote := resources.GetRemote $url }}
 
 {{ if $remote }}
-  {{/* Cut the big diff block up based on git boundaries */}}
-  {{ $chunks := split $remote.Content "diff --git a/" }}
-
+  {{ $chunks := split $remote.Content "diff --git " }}
   {{ $foundDiff := "" }}
   {{ range $chunks }}
-    {{ if hasPrefix . $file }}
-      {{ $foundDiff = print "diff --git a/" . }}
+    {{ if in (index (split . "\n") 0) $file }}
+      {{ $foundDiff = print "diff --git " . }}
     {{ end }}
   {{ end }}
 
-  {{/* Highlight the extracted segment */}}
   {{ if $foundDiff }}
-    {{ transform.Highlight $foundDiff "diff" }}
+    <!-- Wrapper to structure the block like GitHub's UI -->
+    <div class="github-unified-diff-box border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden my-6">
+      <div class="diff-header bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 flex justify-between items-center">
+        <span>📄 {{ $file }}</span>
+        <a href="https://github.com/{{ $repo }}/pull/{{ $pr }}/files" target="_blank" class="text-xs text-primary-500 hover:underline">View on GitHub &rarr;</a>
+      </div>
+      <div class="diff-body text-xs leading-relaxed font-mono overflow-x-auto">
+        {{ transform.Highlight $foundDiff "diff" }}
+      </div>
+    </div>
   {{ else }}
     <p style="color:red;">Error: File path '{{ $file }}' not found in PR #{{ $pr }}</p>
   {{ end }}
