@@ -114,6 +114,27 @@ html.dark {
     width: 100%;
 }
 
+/* --- Native Line Numbers (.ln) Styling --- */
+.gh-diff-container .chroma .ln {
+    margin-right: 1rem;
+    padding-right: 0.5rem;
+    color: #aeafb0 !important;
+    text-align: right;
+    display: inline-block;
+    width: 30px;
+    user-select: none; /* Prevents copying line numbers */
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark .gh-diff-container .chroma .ln {
+    color: #4b5563 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Hide line numbers on git file metadata header lines (First 4 tracking rows) */
+.gh-diff-container .chroma > span:nth-child(-n+4) .ln {
+    visibility: hidden;
+}
+
 /* --- Deletion Rows (Red Lines) --- */
 .gh-diff-container .chroma .gd {
     display: block;
@@ -124,6 +145,9 @@ html.dark {
 .dark .gh-diff-container .chroma .gd {
     background-color: rgba(107, 36, 40, 0.4) !important;
     color: #ff858b !important;
+}
+.gh-diff-container .chroma .gd .ln {
+    color: #fca5a5 !important; /* Make red row numbers easier to read */
 }
 
 /* --- Insertion Rows (Green Lines) --- */
@@ -136,6 +160,9 @@ html.dark {
 .dark .gh-diff-container .chroma .gi {
     background-color: rgba(34, 78, 45, 0.4) !important;
     color: #85e89d !important;
+}
+.gh-diff-container .chroma .gi .ln {
+    color: #86efac !important; /* Make green row numbers easier to read */
 }
 
 /* --- Chunk Metadata Headers (Blue Meta Info) --- */
@@ -150,4 +177,8 @@ html.dark {
     background-color: rgba(56, 139, 253, 0.15) !important;
     color: #79b8ff !important;
 }
-
+/* Hide line numbers specifically inside the @@ chunk marker lines */
+.gh-diff-container .chroma .gu .ln,
+.gh-diff-container .chroma .ge .ln {
+    visibility: hidden;
+}
