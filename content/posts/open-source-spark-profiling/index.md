@@ -219,4 +219,12 @@ Clearly there are some *glaring* differences in the output.
 So now that we have a small, controlled dataset as our baseline, and we have these observed failures,
 we can now dig into the source code and figure out what needs to be fixed.
 
+## The Solution
+
+Let's start with fixing the erroneous flat distribution of values.
+
+### Fixing Flat Distribution
+{{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_counts_spark.py" >}}
+
+### Fixing Numerical Summary
 {{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_numeric_spark.py" >}}
