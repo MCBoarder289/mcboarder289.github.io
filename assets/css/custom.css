@@ -182,3 +182,19 @@ html.dark {
 .gh-diff-container .chroma .ge .ln {
     visibility: hidden;
 }
+
+/* Fix individual line scrolling breaks */
+.gh-diff-body .chroma {
+    display: grid !important;
+    min-width: max-content;
+}
+
+/* Update your existing line classes (.gd, .gi, .gu, .ge) from display: block to display: grid */
+.gh-diff-container .chroma .gd,
+.gh-diff-container .chroma .gi,
+.gh-diff-container .chroma .gu,
+.gh-diff-container .chroma .ge {
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    width: 100% !important;
+}
