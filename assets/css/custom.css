@@ -96,3 +96,59 @@ html.dark {
 /* GenericTraceback */ .chroma .gt { color:#ed8796 }
 /* GenericUnderline */ .chroma .gl { text-decoration:underline }
 }
+
+
+/*Github diff*/
+/* GitHub Style Unified Diff Container Adjustments */
+.github-unified-diff-box pre {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+}
+
+.github-unified-diff-box code {
+    display: grid !important;
+    width: 100%;
+    padding: 0.5rem 0 !important;
+}
+
+/* Base style for every line in the code block */
+.github-unified-diff-box code span {
+    display: inline-block;
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* --- Deletion Rows (Red) --- */
+.github-unified-diff-box .chroma .gd {
+    background-color: rgba(255, 235, 235, 1) !important;
+    color: #650000 !important;
+}
+.dark .github-unified-diff-box .chroma .gd {
+    background-color: rgba(68, 24, 24, 0.6) !important;
+    color: #ff9494 !important;
+}
+
+/* --- Insertion Rows (Green) --- */
+.github-unified-diff-box .chroma .gi {
+    background-color: rgba(230, 249, 230, 1) !important;
+    color: #004d00 !important;
+}
+.dark .github-unified-diff-box .chroma .gi {
+    background-color: rgba(20, 50, 30, 0.6) !important;
+    color: #acf2bd !important;
+}
+
+/* --- Metadata / Chunk Header Rows (Blue) --- */
+.github-unified-diff-box .chroma .gu,
+.github-unified-diff-box .chroma .ge {
+    background-color: rgba(240, 248, 255, 1) !important;
+    color: #003366 !important;
+    font-weight: bold;
+}
+.dark .github-unified-diff-box .chroma .gu,
+.dark .github-unified-diff-box .chroma .ge {
+    background-color: rgba(22, 36, 54, 0.8) !important;
+    color: #79b8ff !important;
+}
