@@ -18,7 +18,7 @@ I have really enjoyed being able to contribute back to libraries that have been 
 
 ## Background
 One of the foundational activities when trying to assess data quality at scale is data profiling.
-Put simply, it's doing some of the high-level gathering of key exploratory metrics like:
+Put simply, it's analyzing high-level exploratory metrics like:
 
 > [!example]
 > * Row Counts
@@ -28,7 +28,7 @@ Put simply, it's doing some of the high-level gathering of key exploratory metri
 
 Last year, my team was asked to perform a large-scale data quality initiative, so we had a need for an efficient process that could deliver exploratory insights in a repeatable fashion.
 
-We needed a process that supported tables with tens of millions of records, most of which are delta lake tables in our data lake, and we landed on a tool called [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling)
+We needed a process that supported tables with tens of millions of records, most of which are delta lake tables in our data lake, and we landed on a tool called [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling).
 
 {{< github repo="data-centric-ai-community/fg-data-profiling" showThumbnail=true >}}
 
@@ -61,8 +61,8 @@ Which would produce an output that looks like this:
 
 ### A Case for Spark
 That example uses [pandas](https://pandas.pydata.org/) to run a profile on that `DataFrame`, which is great when data is small and fits in memory easily.
-At the time, my team was testing this all out in our [Azure Synapse](https://azure.microsoft.com/en-us/products/synapse-analytics)
-The profiles were taking **~20+ minutes** initially because this code was running pandas directly on the driver node.
+At the time, my team was testing this all out in our [Azure Synapse](https://azure.microsoft.com/en-us/products/synapse-analytics) implementation.
+The profiles were taking **~20+ minutes** initially because this code was running pandas directly on the driver node, and not taking advantage of the entire Spark cluster.
 
 For the volume of data my team was profiling, we needed to leverage [Spark](https://spark.apache.org/docs/latest/api/python/index.html) so that all the heavy lifting would happen in our Spark Cluster.
 Good thing `fg-data-profiling` supports Spark DataFrames! 
@@ -121,7 +121,7 @@ options: {
 Time to celebrate?! Well...
 
 ## The Problem
-Running the data profiling in Spark was fast, however, when we compared the results to our slower examples, we noticed that they showed completely different results.
+Running the data profiling in Spark was fast, however, when we compared those outputs to our slower examples in pandas, we noticed that they produced completely different results.
 (In data, it's always good to be skeptical and constantly verify EVERYTHING).
 This didn't sit well with me, so I decided to dive into the library's implementation to see what could possibly be different.
 
@@ -136,6 +136,20 @@ In this case, the assumption is:
 Sounds like a reasonable assumption. So I built a toy dataset to test this theory:
 
 ```python
+from typing import List, Optional, Tuple
+
+from pyspark.sql import types as T
+
+RowType = Tuple[
+    Optional[str],
+    Optional[float],
+    Optional[int],
+    Optional[bool],
+    Optional[float],
+    Optional[str],
+]
+
+
 def create_test_df(spark: SparkSession) -> DataFrame:
     schema = T.StructType(
         [
