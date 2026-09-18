@@ -5,6 +5,8 @@ featureImage: "centered_icon.jpeg"
 summary: "An app that connects your Goodreads shelf to your library"
 showReadingTime: false
 showWordCount: false
+showHero: false
+showTableOfContents: false
 ---
 
 {{< feature-grid columns="1" >}}
