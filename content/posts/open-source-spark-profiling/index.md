@@ -14,7 +14,7 @@ series_order: 1
 
 ## Series Intro
 In this series, I will share my experiences in contributing to open source software.
-I have really enjoyed being able to contribute back to libraries that have been useful in my career, and want to encourage and inspire others to jump in and do the same!
+I have really enjoyed contributing back to libraries that have been useful in my career, and want to encourage and inspire others to jump in and do the same!
 
 ## Background
 One of the foundational activities when trying to assess data quality at scale is data profiling.
@@ -57,7 +57,7 @@ Which would produce an output that looks like this:
 > [!NOTE]
 > This image is from their documentation at [https://docs.profiling.ydata.ai/](https://docs.profiling.ydata.ai/latest/getting-started/quickstart/).
 > 
-> What is `ydata-profiling`? They just rebranded to `fg-data-profiling`.
+> What is `ydata-profiling`? They just re-branded to `fg-data-profiling`.
 
 ### A Case for Spark
 That example uses [pandas](https://pandas.pydata.org/) to run a profile on that `DataFrame`, which is great when data is small and fits in memory easily.
@@ -305,8 +305,8 @@ Now the distribution is fixed!
 ### Fixing Missing Count
 
 In that same fix above, we resolved the proper "Missing" counts by removing the `limit(200)` line.
-That makes sure all records were returned, because it's basing everything off of hte total row count.
-When it was limiting to then top 200 records, then any row that wasn't in the top 200 was conderered "missing" even though it wasn't null.
+That makes sure all records were returned, because it's basing everything off of the total row count.
+When it was limiting to then top 200 records, then any row that wasn't in the top 200 was considered "missing" even though it wasn't null.
 
 Another nuance here is that we needed to make sure that `NaN` values were counted as "Missing" as well, because Spark **does NOT** count those as Null:
 ```python  {hl_lines=[3, 4, 5, 6]}

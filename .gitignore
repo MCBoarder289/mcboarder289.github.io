@@ -12,3 +12,5 @@ Thumbs.db
 .idea
 *.bak
 
+# Vale Prose Linter
+.vale/
