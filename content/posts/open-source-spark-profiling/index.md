@@ -306,7 +306,7 @@ Now the distribution is fixed!
 
 In that same fix above, we resolved the proper "Missing" counts by removing the `limit(200)` line.
 That makes sure all records were returned, because it's basing everything off of the total row count.
-When it was limiting to then top 200 records, then any row that wasn't in the top 200 was considered "missing" even though it wasn't null.
+When it was limiting to the top 200 records, then any row that wasn't in the top 200 was considered "missing" even though it wasn't null.
 
 Another nuance here is that we needed to make sure that `NaN` values were counted as "Missing" as well, because Spark **does NOT** count those as Null:
 ```python  {hl_lines=[3, 4, 5, 6]}
