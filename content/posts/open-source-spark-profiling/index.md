@@ -213,18 +213,155 @@ Clearly there are some *glaring* differences in the output.
 
 >[!bug]
 > * Spark shows a *flat* distribution of values, when clearly the data shows that the value of 1 is duplicated far more
-> * Most of the descriptive stats in Spark are `nan` or far off from pandas
 > * The missing count in Spark shows `310`, but we know there are only `100` missing values
+> * Most of the descriptive stats in Spark are `nan` or far off from pandas
 
 So now that we have a small, controlled dataset as our baseline, and we have these observed failures,
 we can now dig into the source code and figure out what needs to be fixed.
 
 ## The Solution
 
-Let's start with fixing the erroneous flat distribution of values.
+There were a lot of changes that went into [the PR I put up to resolve all of these issues](https://github.com/Data-Centric-AI-Community/fg-data-profiling/pull/1800).
+Let's walk through each of the main problems and their solutions based on the key changes that were made in that PR.
 
 ### Fixing Flat Distribution
+To fix the flat distribution of distinct values, here are the relevant code changes:
 {{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_counts_spark.py" >}}
 
+The problem here in the original code the produces the profile for a single column.
+It was running a count on **an already aggregated dataframe**:
+
+```python {hl_lines=[10, 18]}
+value_counts = series.groupBy(series.columns[0]).count()
+
+...
+
+if series.dtypes[0][1] in ("int", "float", "bigint", "double"):
+        value_counts_no_nan = (
+            value_counts.filter(F.col(column).isNotNull())  # Exclude NaNs
+            .filter(~F.isnan(F.col(column)))  # Remove implicit NaNs (if numeric column)
+            .groupBy(column)  # Group by unique values
+            .count()  # Count occurrences
+            .orderBy(F.desc("count"))  # Sort in descending order
+            .limit(200)  # Limit for performance
+        )
+else:
+    value_counts_no_nan = (
+        value_counts.filter(F.col(column).isNotNull())  # Exclude NULLs
+        .groupBy(column)  # Group by unique timestamp values
+        .count()  # Count occurrences
+        .orderBy(F.desc("count"))  # Sort by most frequent timestamps
+        .limit(200)  # Limit for performance
+    )
+```
+
+With our test dataset that we created, we should have numbers 1 - 205, with 1 being duplicated many times, so the `value_counts` dataframe would be a table like this:
+
+| decimal | count |
+|---|---|
+| 1 | 206 |
+| 2 | 1 |
+| 3 | 1 |
+| ... | ...|
+| 205 | 1 |
+
+But the original code was running a `.count()` on that aggregated dataset, so the resulting table ended up just counting the rows like this:
+
+| decimal | count |
+|---|---|
+| 1 | 1 |
+| 2 | 1 |
+| 3 | 1 |
+| ... | ...|
+| 205 | 1 |
+
+That leaves every value at a flat count of 1 for every unique variable and not the actual distribution like we expect.
+The solution is to switch to a **sum of the count column**:
+
+```python {hl_lines=[10, 17]}
+value_counts = series.groupBy(series.columns[0]).count()
+
+...
+
+if series.dtypes[0][1] in ("int", "float", "bigint", "double"):
+        value_counts_no_nan = (
+            value_counts.filter(F.col(column).isNotNull())  # Exclude NaNs
+            .filter(~F.isnan(F.col(column)))  # Remove implicit NaNs (if numeric column)
+            .groupBy(column)  # Group by unique values
+            .agg(F.sum("count").alias("count"))  # Sum of count
+            .orderBy(F.desc("count"))  # Sort in descending order
+        )
+else:
+    value_counts_no_nan = (
+        value_counts.filter(F.col(column).isNotNull())  # Exclude NULLs
+        .groupBy(column)  # Group by unique timestamp values
+        .agg(F.sum("count").alias("count"))  # Sum of count
+        .orderBy(F.desc("count"))  # Sort by most frequent timestamps
+    )
+```
+
+Now the distribution is fixed! 
+
+### Fixing Missing Count
+
+In that same fix above, we resolved the proper "Missing" counts by removing the `limit(200)` line.
+That makes sure all records were returned, because it's basing everything off of hte total row count.
+When it was limiting to then top 200 records, then any row that wasn't in the top 200 was conderered "missing" even though it wasn't null.
+
+Another nuance here is that we needed to make sure that `NaN` values were counted as "Missing" as well, because Spark **does NOT** count those as Null:
+```python  {hl_lines=[3, 4, 5, 6]}
+if series.dtypes[0][1] in ("int", "float", "bigint", "double"):
+        n_missing = (
+            # Need to add the isnan() check because Pandas isnull check will count NaN as null, but Spark does not
+            value_counts.filter(
+                F.col(series.columns[0]).isNull() | F.isnan(F.col(series.columns[0]))
+            )
+            .select("count")
+            .first()
+        )
+else:
+    n_missing = (
+        # Need to add the isnan() check because Pandas isnull check will count NaN as null, but Spark does not
+        value_counts.filter(F.col(series.columns[0]).isNull())
+        .select("count")
+        .first()
+    )
+```
+
+Now the output of the actual count of unique values is fixed! Let's move onto the numerical summary issue.
+
 ### Fixing Numerical Summary
+Here are the specific code changes that resolve the other numerical summary issues:
 {{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_numeric_spark.py" >}}
+
+The root cause of the mismatching summary statistics is due to a difference in how pandas handles null values vs. how Spark handles that scenario.
+
+As an example,[ take the documentation for the `mean` function in pandas](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.mean.html#pandas.DataFrame.mean).
+The key observation here is:
+> The `skipna` argument defaults to `True`.
+> 
+> [source code](https://github.com/pandas-dev/pandas/blob/v3.0.6/pandas/core/frame.py#L14398)
+
+This means that for a column that has null values, it will a summary statistic that filters out any null values.
+Our solution needs to filter out exactly what pandas would filter out, so things like `NaN` (not a number), null values, and any values representing infinity.
+
+The other edge case we handle with our test dataset is where columns can be completely null. 
+These were breaking in the reports, so we forced a default `NaN` value when we aren't able to actually compute the statistic.
+
+### Other Misc Fixes
+The rest of the changes in [the PR](https://github.com/Data-Centric-AI-Community/fg-data-profiling/pull/1800) handle a couple edge cases that our test data produced:
+
+* Fixes reporting cases when a column was entirely null (certain reports would simply break or not render, so we render a placeholder instead)
+* Enables the `DecimalType` in numerical stats, because we can cast that to a float and perform the same mathematical operations easily.
+
+## Conclusion
+Once we had these changes implemented and merged, our team was able to fully leverage the [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling) tool for our data quality audit.
+This vastly sped up our iteration time as we could take full advantage of the Spark cluster to get the answers we needed.
+
+Personally, this is what I consider to be my first impactful contribution to an open-source project.
+When I was fixing this for my team, I realized I could give back to the community by simply sharing what I found.
+It was incredibly rewarding to see 4 different issues resolved based on this one PR, and then to see a release cut so quickly after getting this merged!
+
+The team who maintains [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling) was so responsive and kind in their feedback, which inspired me to seek out more opportunities to contribute to open-source projects.
+
+Looking forward to sharing more of my adventures in open source in this series!

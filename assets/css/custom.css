@@ -98,7 +98,7 @@ html.dark {
 }
 
 
-/*Github diff*/
+/* Github diff */
 /* GitHub Style Unified Diff Container Adjustments */
 /* Container Box Controls */
 .gh-diff-container pre {
@@ -198,3 +198,36 @@ html.dark {
     grid-template-columns: auto 1fr;
     width: 100% !important;
 }
+
+
+/* Table Formatting */
+/* Base styles for Light Mode */
+.prose table {
+  border-collapse: collapse;
+  display: table;            /* Ensures table properties are respected */
+  width: max-content;        /* Shrinks the table to only wrap its contents */
+  max-width: 100%;           /* Prevents the table from breaking mobile screens */
+  margin: 1.5rem auto;       /* Centers the table horizontally (top/bottom 1.5rem, left/right auto) */
+}
+
+.prose th,
+.prose td {
+  border: 1px solid #9ca3af; /* Darker gray (Tailwind gray-400) for distinct cell separation */
+  padding: 0.75rem 1rem;
+}
+
+.prose th {
+  background-color: #f3f4f6; /* Darkened header fill (Tailwind gray-100) */
+  font-weight: 600;
+}
+
+/* Overrides for Dark Mode */
+.dark .prose th,
+.dark .prose td {
+  border: 1px solid #4b5563; /* Refined dark mode border (Tailwind gray-600) */
+}
+
+.dark .prose th {
+  background-color: #1f2937; /* Tailwind gray-800 */
+}
+
