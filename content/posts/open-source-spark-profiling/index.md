@@ -202,12 +202,20 @@ spark_profile.to_file("spark_example.html")
 ### Initial State - pandas
 Here is what that initial profile looks like when run with a pandas dataframe:
 
-{{< carousel images="{pandas_first.png,pandas_second.png}" interval="2500" aspectRatio="4-3" captions="{pandas_first.png:double column profile in `pandas`,pandas_second.png:double column profile in `pandas` (common values)}">}}
+{{< gallery-zoom 
+  images="{pandas_first.png,pandas_second.png}" 
+  interval="2500" 
+  aspectRatio="4-3" 
+  captions="{pandas_first.png:double column profile in `pandas`,pandas_second.png:double column profile in `pandas` (common values)}">}}
 
 ### Initial State - Spark
 But here is what that same dataset looked like when profiled in Spark:
 
-{{< carousel images="spark_first_broken.png,spark_second_broken.png}" interval="2500" aspectRatio="4-3" captions="{spark_first_broken.png:double column profile in `Spark`,spark_second_broken.png:double column profile in `Spark` (common values)}">}}
+{{< gallery-zoom 
+  images="spark_first_broken.png,spark_second_broken.png}" 
+  interval="2500" 
+  aspectRatio="4-3" 
+  captions="{spark_first_broken.png:double column profile in `Spark`,spark_second_broken.png:double column profile in `Spark` (common values)}">}}
 
 Clearly there are some *glaring* differences in the output.
 
@@ -342,8 +350,10 @@ The key observation here is:
 > 
 > [source code](https://github.com/pandas-dev/pandas/blob/v3.0.6/pandas/core/frame.py#L14398)
 
-This means that for a column that has null values, it will a summary statistic that filters out any null values.
-Our solution needs to filter out exactly what pandas would filter out, so things like `NaN` (not a number), null values, and any values representing infinity.
+This means that for a column that has null values, the summary statistic to be computed filters out any null values.
+In pandas, `NaN` values are considered null, but in Spark, `NaN` is considered not null and will simply return a `NaN` for the aggregate summary statistic.
+
+Therefore, to match pandas' output, our Spark solution had to filter out exactly what pandas would filter out, so things like `NaN` (not a number), null values, and any values representing infinity.
 
 The other edge case we handle with our test dataset is where columns can be completely null. 
 These were breaking in the reports, so we forced a default `NaN` value when we aren't able to actually compute the statistic.
@@ -353,6 +363,22 @@ The rest of the changes in [the PR](https://github.com/Data-Centric-AI-Community
 
 * Fixes reporting cases when a column was entirely null (certain reports would simply break or not render, so we render a placeholder instead)
 * Enables the `DecimalType` in numerical stats, because we can cast that to a float and perform the same mathematical operations easily.
+
+### Fixed State - Spark vs. Pandas
+With all of these fixes, Spark's output is now correctly matching the original pandas output:
+
+{{< gallery-zoom 
+  images="{pandas_first.png,spark_first_fixed.png}" 
+  interval="2500" 
+  aspectRatio="4-3" 
+  captions="{pandas_first.png:double column profile in `pandas`,spark_first_fixed.png:double column profile in `Spark`}">}}
+
+{{< gallery-zoom 
+  images="{pandas_second.png,spark_second_fixed.png}" 
+  interval="2500" 
+  aspectRatio="4-3" 
+  captions="{pandas_second.png:double column profile in `pandas` (common values),spark_second_fixed.png:double column profile in `Spark` (common values)">}}
+
 
 ## Conclusion
 Once we had these changes implemented and merged, our team was able to fully leverage the [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling) tool for our data quality audit.

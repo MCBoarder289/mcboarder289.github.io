@@ -1,0 +1,412 @@
+{{ $id := delimit (slice "gallery-zoom" (partial "functions/uid.html" .) (now.UnixNano)) "-" }}
+{{ $aspect := (split (.Get "aspectRatio") "-") }}
+{{ $aspectx := default "16" (index $aspect 0) }}
+{{ $aspecty := default "9" (index $aspect 1) }}
+{{ $interval := default "2000" (.Get "interval") }}
+{{ $page := .Page.Resources }}
+{{ $imagesTemp := .Get "images" }}
+{{ $imagesTemp = strings.TrimPrefix "{" $imagesTemp }}
+{{ $imagesTemp = strings.TrimSuffix "}" $imagesTemp }}
+{{ $imagesTemp := strings.Split $imagesTemp "," }}
+{{ $images := slice }}
+
+{{ range $imagesTemp }}
+  {{ if or (strings.HasPrefix . "http:") (strings.HasPrefix . "https:") }}
+    {{ $images = $images | append (dict "resource" (resources.GetRemote .) "key" .) }}
+  {{ else }}
+    {{ range ($page.Match .) }}
+      {{ $images = $images | append (dict "resource" . "key" .Name) }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ $captionsParam := .Get "captions" }}
+{{ $captions := dict }}
+{{ if $captionsParam }}
+  {{ $captionsTemp := strings.TrimPrefix "{" $captionsParam }}
+  {{ $captionsTemp = strings.TrimSuffix "}" $captionsTemp }}
+  {{ range (strings.Split $captionsTemp ",") }}
+    {{ $pair := strings.Split . ":" }}
+    {{ if ge (len $pair) 2 }}
+      {{ $key := strings.TrimSpace (index $pair 0) }}
+      {{ $value := strings.TrimSpace (delimit (after 1 $pair) ":") }}
+      {{ $captions = merge $captions (dict $key $value) }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+<!-- ============================================================
+     CAROUSEL HTML CONTAINER
+     ============================================================ -->
+<div id="{{ $id }}" class="relative w-full" data-twe-carousel-init data-twe-ride="carousel" data-twe-interval="{{ $interval }}">
+
+  <!-- Slide Indicators -->
+  <div class="absolute bottom-0 left-0 right-0 z-20 mx-[15%] mb-4 flex list-none justify-center p-0" data-twe-carousel-indicators>
+    {{ range $index, $image := $images }}
+      <button
+        type="button"
+        data-twe-target="#{{ $id }}"
+        data-twe-slide-to="{{ $index }}"
+        {{ if eq $index 0 }}data-twe-carousel-active aria-current="true"{{ end }}
+        class="mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
+        aria-label="Slide {{ add $index 1 }}">
+      </button>
+    {{ end }}
+  </div>
+
+  <!-- Carousel Slides -->
+  <div class="relative w-full overflow-hidden after:clear-both after:block after:content-['']">
+    {{ range $index, $image := $images }}
+      {{ $hiddenClass := cond (eq $index 0) "" "hidden" }}
+      {{ $resource := index $image "resource" }}
+      {{ $key := index $image "key" }}
+      {{ $caption := "" }}
+      {{ $candidates := slice }}
+
+      {{ if $resource }}
+        {{ $candidates = $candidates | append $resource.Name (path.Base $resource.Name) $resource.RelPermalink (path.Base $resource.RelPermalink) }}
+      {{ end }}
+      {{ if $key }}
+        {{ $candidates = $candidates | append $key (path.Base $key) }}
+      {{ end }}
+
+      {{ range $candidates }}
+        {{ if and (not $caption) . }}
+          {{ with (index $captions .) }}
+            {{ $caption = . }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+
+      <div class="relative float-left -mr-[100%] w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none {{ $hiddenClass }}" data-twe-carousel-item {{ if eq $index 0 }}data-twe-carousel-active{{ end }}>
+        <figure class="m-0 flex flex-col items-center justify-center">
+          <div class="w-full relative overflow-hidden" style="aspect-ratio: {{ $aspectx }} / {{ $aspecty }};">
+            {{ if $resource }}
+              <img
+                src="{{ $resource.RelPermalink }}"
+                data-gallery-zoom-index="{{ $index }}"
+                data-zoom-disabled="true"
+                class="nozoom block w-full h-full object-cover cursor-zoom-in"
+                alt="{{ if $caption }}{{ $caption }}{{ else }}carousel image {{ add $index 1 }}{{ end }}" />
+            {{ else }}
+              <img
+                src="{{ $key }}"
+                data-gallery-zoom-index="{{ $index }}"
+                data-zoom-disabled="true"
+                class="nozoom block w-full h-full object-cover cursor-zoom-in"
+                alt="{{ if $caption }}{{ $caption }}{{ else }}carousel image {{ add $index 1 }}{{ end }}" />
+            {{ end }}
+          </div>
+
+          {{ if or $caption $captionsParam }}
+            <figcaption class="w-full text-center mt-2 px-4 text-sm text-neutral-500 dark:text-neutral-400">
+              {{ if $caption }}{{ $caption | markdownify }}{{ else }}&nbsp;{{ end }}
+            </figcaption>
+          {{ end }}
+        </figure>
+      </div>
+    {{ end }}
+  </div>
+
+  <!-- Navigation Arrows -->
+  <button class="absolute bottom-0 left-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-twe-target="#{{ $id }}" data-twe-slide="prev">
+    <span class="inline-block h-8 w-8">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="4.5"
+        stroke="currentColor"
+        class="h-6 w-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+      </svg>
+    </span>
+    <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Previous</span>
+  </button>
+  <button class="absolute bottom-0 right-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-twe-target="#{{ $id }}" data-twe-slide="next">
+    <span class="inline-block h-8 w-8">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="4.5"
+        stroke="currentColor"
+        class="h-6 w-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+    </span>
+    <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Next</span>
+  </button>
+</div>
+
+<!-- ============================================================
+     LIGHTBOX DIALOG LAYER
+     ============================================================ -->
+<div class="gallery-zoom-overlay" hidden aria-hidden="true" tabindex="-1">
+  <div class="gallery-zoom-dialog-content">
+    <button class="gallery-zoom-close" aria-label="Close dialog">&times;</button>
+    <button class="gallery-zoom-prev" aria-label="Previous image">&#10094;</button>
+    <button class="gallery-zoom-next" aria-label="Next image">&#10095;</button>
+
+    <figure class="gallery-zoom-figure">
+      <img class="gallery-zoom-image nozoom" data-zoom-disabled="true" src="" alt="" />
+      <figcaption class="gallery-zoom-caption text-sm text-neutral-300"></figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- ============================================================
+     CAPTION LAYOUT FIX
+     ============================================================ -->
+{{ if $captionsParam }}
+<script>
+  (() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const root = document.getElementById("{{ $id }}");
+      if (!root) return;
+
+      const items = Array.from(root.querySelectorAll("[data-twe-carousel-item]"));
+      const captions = items.map((item) => item.querySelector("figcaption")).filter((caption) => caption);
+      if (captions.length < 2) return;
+
+      const measureAndFixCaptionHeight = () => {
+        const hiddenItems = items.filter((item) => item.classList.contains("hidden"));
+
+        hiddenItems.forEach((item) => item.classList.remove("hidden"));
+        const maxHeight = Math.max(...captions.map((caption) => Math.ceil(caption.getBoundingClientRect().height)));
+        hiddenItems.forEach((item) => item.classList.add("hidden"));
+
+        captions.forEach((caption) => {
+          caption.style.minHeight = `${maxHeight}px`;
+        });
+      };
+
+      window.requestAnimationFrame(measureAndFixCaptionHeight);
+      window.addEventListener("resize", measureAndFixCaptionHeight);
+    });
+  })();
+</script>
+{{ end }}
+
+<!-- ============================================================
+     LIGHTBOX STRUCTURAL STYLES
+     ============================================================ -->
+<style>
+  .gallery-zoom-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.94);
+    color: white;
+    isolation: isolate;
+  }
+
+  .gallery-zoom-overlay[hidden] {
+    display: none;
+  }
+
+  .gallery-zoom-dialog-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .gallery-zoom-figure,
+  .gallery-zoom-close,
+  .gallery-zoom-prev,
+  .gallery-zoom-next {
+    pointer-events: auto;
+  }
+
+  .gallery-zoom-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 4rem 5rem;
+    box-sizing: border-box;
+  }
+
+  .gallery-zoom-image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 8rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    cursor: default;
+  }
+
+  .gallery-zoom-caption {
+    margin-top: 1rem;
+    max-width: 90%;
+    text-align: center;
+  }
+
+  .gallery-zoom-close,
+  .gallery-zoom-prev,
+  .gallery-zoom-next {
+    position: absolute;
+    z-index: 20;
+    border: 0;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+
+  .gallery-zoom-close:hover,
+  .gallery-zoom-prev:hover,
+  .gallery-zoom-next:hover {
+    opacity: 1;
+  }
+
+  .gallery-zoom-close {
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .gallery-zoom-prev,
+  .gallery-zoom-next {
+    top: 50%;
+    padding: 1rem;
+    font-size: 3rem;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
+
+  .gallery-zoom-prev { left: 1rem; }
+  .gallery-zoom-next { right: 1rem; }
+
+  @media (max-width: 640px) {
+    .gallery-zoom-figure { padding: 3.5rem 2.5rem; }
+    .gallery-zoom-prev, .gallery-zoom-next { font-size: 2rem; }
+  }
+</style>
+
+<script>
+  (() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const root = document.getElementById("{{ $id }}");
+      if (!root) return;
+
+      const overlay = root.nextElementSibling;
+      if (!overlay || !overlay.matches(".gallery-zoom-overlay")) return;
+
+      const zoomImage = overlay.querySelector(".gallery-zoom-image");
+      const zoomCaption = overlay.querySelector(".gallery-zoom-caption");
+      const closeButton = overlay.querySelector(".gallery-zoom-close");
+      const prevButton = overlay.querySelector(".gallery-zoom-prev");
+      const nextButton = overlay.querySelector(".gallery-zoom-next");
+
+      const items = Array.from(root.querySelectorAll("[data-twe-carousel-item]"));
+      let currentIndex = 0;
+      const previousBodyOverflow = document.body.style.overflow;
+
+      const updateLightbox = (index) => {
+        if (!items.length) return;
+        currentIndex = (index + items.length) % items.length;
+        const item = items[currentIndex];
+
+        const sourceImage = item.querySelector("[data-gallery-zoom-index]");
+        const sourceCaption = item.querySelector("figcaption");
+        if (!sourceImage) return;
+
+        zoomImage.src = sourceImage.currentSrc || sourceImage.src;
+        zoomImage.alt = sourceImage.alt || "";
+
+        if (sourceCaption && sourceCaption.textContent.trim() !== "") {
+          zoomCaption.innerHTML = sourceCaption.innerHTML;
+          zoomCaption.hidden = false;
+        } else {
+          zoomCaption.innerHTML = "";
+          zoomCaption.hidden = true;
+        }
+      };
+
+      const openLightbox = (index) => {
+        updateLightbox(index);
+        overlay.hidden = false;
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        overlay.focus();
+      };
+
+      const closeLightbox = () => {
+        if (overlay.hidden) return;
+        overlay.hidden = true;
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = previousBodyOverflow;
+        zoomImage.removeAttribute("src");
+        zoomImage.alt = "";
+        zoomCaption.innerHTML = "";
+        zoomCaption.hidden = true;
+      };
+
+      items.forEach((item, index) => {
+        const image = item.querySelector("[data-gallery-zoom-index]");
+        if (!image) return;
+        image.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openLightbox(index);
+        });
+      });
+
+      closeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeLightbox();
+      });
+
+      prevButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        updateLightbox(currentIndex - 1);
+      });
+
+      nextButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        updateLightbox(currentIndex + 1);
+      });
+
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay || event.target.classList.contains("gallery-zoom-dialog-content")) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (overlay.hidden) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeLightbox();
+          return;
+        }
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          updateLightbox(currentIndex - 1);
+          return;
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          updateLightbox(currentIndex + 1);
+        }
+      });
+    });
+  })();
+</script>
