@@ -133,7 +133,7 @@ I find [Test Driven Development](https://en.wikipedia.org/wiki/Test-driven_devel
 In this case, the assumption is: 
 > Given the same dataset, the data profile report should be the same for pandas and Spark
 
-Sounds like a reasonable assumption. So I built a toy dataset to test this theory:
+Sounds like a reasonable assumption, so I built a toy dataset to test this theory:
 
 ```python
 from typing import List, Optional, Tuple
@@ -212,16 +212,16 @@ But here is what that same dataset looked like when profiled in Spark:
 Clearly there are some *glaring* differences in the output.
 
 >[!bug]
-> * Spark shows a *flat* distribution of values, when clearly the data shows that the value of 1 is duplicated far more
+> * Spark shows a *flat* distribution of values, when the actual data shows that the value of 1 is duplicated far more
 > * The missing count in Spark shows `310`, but we know there are only `100` missing values
 > * Most of the descriptive stats in Spark are `nan` or far off from pandas
 
-So now that we have a small, controlled dataset as our baseline, and we have these observed failures,
+Now that we have a small, controlled dataset as our baseline, and we have these observed failures,
 we can now dig into the source code and figure out what needs to be fixed.
 
 ## The Solution
 
-There were a lot of changes that went into [the PR I put up to resolve all of these issues](https://github.com/Data-Centric-AI-Community/fg-data-profiling/pull/1800).
+There were a lot of changes that went into [the PR I put up to resolve each of these issues](https://github.com/Data-Centric-AI-Community/fg-data-profiling/pull/1800).
 Let's walk through each of the main problems and their solutions based on the key changes that were made in that PR.
 
 ### Fixing Flat Distribution
