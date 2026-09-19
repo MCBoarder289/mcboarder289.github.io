@@ -38,26 +38,33 @@
 <!-- ============================================================
      CAROUSEL HTML CONTAINER
      ============================================================ -->
-<div id="{{ $id }}" class="relative w-full" data-twe-carousel-init data-twe-ride="carousel" data-twe-interval="{{ $interval }}">
+<div
+  id="{{ $id }}"
+  class="relative w-full"
+  data-gallery-carousel
+  data-gallery-interval="{{ $interval }}"
+>
 
   <!-- Slide Indicators -->
-  <div class="absolute bottom-0 left-0 right-0 z-20 mx-[15%] mb-4 flex list-none justify-center p-0" data-twe-carousel-indicators>
+  <div
+    class="absolute bottom-0 left-0 right-0 z-20 mx-[15%] mb-4 flex list-none justify-center p-0"
+    data-gallery-indicators
+  >
     {{ range $index, $image := $images }}
       <button
         type="button"
-        data-twe-target="#{{ $id }}"
-        data-twe-slide-to="{{ $index }}"
-        {{ if eq $index 0 }}data-twe-carousel-active aria-current="true"{{ end }}
+        data-gallery-slide-to="{{ $index }}"
         class="mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
-        aria-label="Slide {{ add $index 1 }}">
+        aria-label="Slide {{ add $index 1 }}"
+        aria-current="false">
       </button>
     {{ end }}
   </div>
 
   <!-- Carousel Slides -->
-  <div class="relative w-full overflow-hidden after:clear-both after:block after:content-['']">
+  <div class="relative w-full overflow-hidden">
+    <div class="gallery-carousel-track flex w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none">
     {{ range $index, $image := $images }}
-      {{ $hiddenClass := cond (eq $index 0) "" "hidden" }}
       {{ $resource := index $image "resource" }}
       {{ $key := index $image "key" }}
       {{ $caption := "" }}
@@ -78,7 +85,11 @@
         {{ end }}
       {{ end }}
 
-      <div class="relative float-left -mr-[100%] w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none {{ $hiddenClass }}" data-twe-carousel-item {{ if eq $index 0 }}data-twe-carousel-active{{ end }}>
+      <div
+        class="gallery-carousel-slide relative w-full shrink-0"
+        data-gallery-carousel-item
+        data-gallery-index="{{ $index }}"
+      >
         <figure class="m-0 flex flex-col items-center justify-center">
           <div class="w-full relative overflow-hidden" style="aspect-ratio: {{ $aspectx }} / {{ $aspecty }};">
             {{ if $resource }}
@@ -106,10 +117,11 @@
         </figure>
       </div>
     {{ end }}
+    </div>
   </div>
 
   <!-- Navigation Arrows -->
-  <button class="absolute bottom-0 left-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-twe-target="#{{ $id }}" data-twe-slide="prev">
+  <button class="absolute bottom-0 left-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-gallery-prev>
     <span class="inline-block h-8 w-8">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +135,7 @@
     </span>
     <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Previous</span>
   </button>
-  <button class="absolute bottom-0 right-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-twe-target="#{{ $id }}" data-twe-slide="next">
+  <button class="absolute bottom-0 right-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-gallery-next>
     <span class="inline-block h-8 w-8">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -312,7 +324,106 @@
       const prevButton = overlay.querySelector(".gallery-zoom-prev");
       const nextButton = overlay.querySelector(".gallery-zoom-next");
 
-      const items = Array.from(root.querySelectorAll("[data-twe-carousel-item]"));
+      // ------------------------------------------------------------
+      // INLINE CAROUSEL
+      // Keep this independent of TW Elements so interval, arrows,
+      // indicators, and active-slide state are deterministic.
+      // ------------------------------------------------------------
+      const carouselTrack = root.querySelector(".gallery-carousel-track");
+      const carouselItems = Array.from(
+        root.querySelectorAll("[data-gallery-carousel-item]")
+      );
+      const carouselIndicators = Array.from(
+        root.querySelectorAll("[data-gallery-slide-to]")
+      );
+      const carouselPrev = root.querySelector("[data-gallery-prev]");
+      const carouselNext = root.querySelector("[data-gallery-next]");
+
+      let carouselIndex = 0;
+      let carouselTimer = null;
+
+      const carouselInterval = Math.max(
+        0,
+        Number(root.dataset.galleryInterval || 0)
+      );
+
+      const stopCarouselTimer = () => {
+        if (carouselTimer !== null) {
+          window.clearInterval(carouselTimer);
+          carouselTimer = null;
+        }
+      };
+
+      const startCarouselTimer = () => {
+        stopCarouselTimer();
+
+        if (carouselInterval > 0 && carouselItems.length > 1) {
+          carouselTimer = window.setInterval(() => {
+            updateCarousel(carouselIndex + 1, false);
+          }, carouselInterval);
+        }
+      };
+
+      const updateCarousel = (index, restartTimer = true) => {
+        if (!carouselTrack || !carouselItems.length) return;
+
+        carouselIndex =
+          (index + carouselItems.length) % carouselItems.length;
+
+        carouselTrack.style.transform =
+          `translateX(-${carouselIndex * 100}%)`;
+
+        carouselIndicators.forEach((indicator, i) => {
+          const active = i === carouselIndex;
+
+          indicator.classList.toggle("opacity-100", active);
+          indicator.classList.toggle("opacity-50", !active);
+          indicator.setAttribute(
+            "aria-current",
+            active ? "true" : "false"
+          );
+        });
+
+        if (restartTimer) {
+          startCarouselTimer();
+        }
+      };
+
+      const nextCarousel = () => {
+        updateCarousel(carouselIndex + 1);
+      };
+
+      const prevCarousel = () => {
+        updateCarousel(carouselIndex - 1);
+      };
+
+      carouselIndicators.forEach((indicator, index) => {
+        indicator.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          updateCarousel(index);
+        });
+      });
+
+      carouselPrev?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        prevCarousel();
+      });
+
+      carouselNext?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        nextCarousel();
+      });
+
+      updateCarousel(0, false);
+      startCarouselTimer();
+
+      // ------------------------------------------------------------
+      // LIGHTBOX
+      // ------------------------------------------------------------
+      const items = carouselItems;
       let currentIndex = 0;
       const previousBodyOverflow = document.body.style.overflow;
 
@@ -385,9 +496,17 @@
       });
 
       overlay.addEventListener("click", (event) => {
-        if (event.target === overlay || event.target.classList.contains("gallery-zoom-dialog-content")) {
-          closeLightbox();
+        const clickedElement = event.target;
+
+        if (
+          clickedElement.closest(
+            ".gallery-zoom-close, .gallery-zoom-prev, .gallery-zoom-next, .gallery-zoom-image, .gallery-zoom-caption"
+          )
+        ) {
+          return;
         }
+
+        closeLightbox();
       });
 
       document.addEventListener("keydown", (event) => {
