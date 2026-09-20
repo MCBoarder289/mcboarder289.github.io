@@ -176,7 +176,7 @@
       const root = document.getElementById("{{ $id }}");
       if (!root) return;
 
-      const items = Array.from(root.querySelectorAll("[data-twe-carousel-item]"));
+      const items = Array.from(root.querySelectorAll("[data-gallery-carousel-item]"));
       const captions = items.map((item) => item.querySelector("figcaption")).filter((caption) => caption);
       if (captions.length < 2) return;
 
