@@ -20,7 +20,7 @@ I have really enjoyed contributing back to libraries that have been useful in my
 One of the foundational activities when trying to assess data quality at scale is data profiling.
 Put simply, it's analyzing high-level exploratory metrics like:
 
-> [!example]
+> [!example] Common Data Profiling Metrics
 > * Row Counts
 > * Numerical column statistics (mean, median, distributions)
 > * Categorical column information (distinct values, distinct counts)
@@ -182,7 +182,7 @@ There are some key features about this data that we should see in the profile:
 * We duplicate a categorical field to also show a skewed distribution
 * We add a sizable amount of nulls, including columns that are always null
 
-Now we can run the profile, once for pandas, then for spark and compare the outputs.
+Now we can run the profile, once for pandas, then for Spark and compare the outputs.
 
 ```python
 from data_profiling import ProfileReport
@@ -219,7 +219,7 @@ But here is what that same dataset looked like when profiled in Spark:
 
 Clearly there are some *glaring* differences in the output.
 
->[!bug]
+>[!bug] Issues
 > * Spark shows a *flat* distribution of values, when the actual data shows that the value of 1 is duplicated far more
 > * The missing count in Spark shows `310`, but we know there are only `100` missing values
 > * Most of the descriptive stats in Spark are `nan` or far off from pandas
@@ -383,6 +383,10 @@ With all of these fixes, Spark's output is now correctly matching the original p
 ## Conclusion
 Once we had these changes implemented and merged, our team was able to fully leverage the [fg-data-profiling](https://github.com/data-centric-ai-community/fg-data-profiling) tool for our data quality audit.
 This vastly sped up our iteration time as we could take full advantage of the Spark cluster to get the answers we needed.
+
+When using `pandas` on its own, the ~10+ minutes was reading the entire source tables into memory on the driver before doing any aggregation. 
+Using `Spark`, we allowed the query engine to do most of that hard aggregation work without the need to bring the entire table into the.
+At the end of the day **with these fixes, our profiles still had that ~10x speedup**!
 
 Personally, this is what I consider to be my first impactful contribution to an open-source project.
 When I was fixing this for my team, I realized I could give back to the community by simply sharing what I found.
