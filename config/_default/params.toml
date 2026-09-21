@@ -17,7 +17,7 @@ enableStructuredBreadcrumbs = false
 
 replyByEmail = false
 
-# mainSections = ["section1", "section2"]
+mainSections = ["posts"]  # this dictates what shows up under "Recent" on the homepage
 # robots = ""
 
 disableImageOptimization = false
