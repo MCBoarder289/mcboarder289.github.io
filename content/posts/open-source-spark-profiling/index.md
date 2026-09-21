@@ -5,6 +5,7 @@ summary: "Walkthrough of my open source contributions to fg-data-profiling, a li
 tags: ["spark", "data engineering"]
 categories: ["open source"]
 featureimage: "spark_plus_profiling.jpg"
+images: ["spark_plus_profiling.jpg"]
 showHero: true
 heroStyle: thumbAndBackground
 series: 
