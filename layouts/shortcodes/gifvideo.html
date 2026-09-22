@@ -1,0 +1,140 @@
+{{- /*
+  gifvideo.html
+
+  Usage:
+    {{< gifvideo src="demo.webm" poster="demo.jpg" alt="Description of the animation" >}}
+
+  Expected location for local assets:
+    content/posts/my-post/
+      index.md
+      demo.webm
+      demo.jpg
+
+  Optional parameters:
+    src       Required. Local page resource filename or absolute URL.
+    poster    Optional. Local page resource filename or absolute URL.
+    alt       Required/recommended. Accessible description.
+    class     Optional. Additional class(es) on the trigger.
+*/ -}}
+
+{{- $srcParam := .Get "src" -}}
+{{- if not $srcParam -}}
+  {{- errorf "gifvideo shortcode requires a src parameter in %q" .Position -}}
+{{- end -}}
+
+{{- $id := delimit (slice "gifvideo" (partial "functions/uid.html" .) (now.UnixNano)) "-" -}}
+
+{{- $src := "" -}}
+{{- $srcResource := false -}}
+
+{{- if or (strings.HasPrefix $srcParam "http://") (strings.HasPrefix $srcParam "https://") -}}
+  {{- $src = $srcParam -}}
+{{- else -}}
+  {{- with .Page.Resources.GetMatch $srcParam -}}
+    {{- $srcResource = . -}}
+    {{- $src = .RelPermalink -}}
+  {{- else -}}
+    {{- errorf "gifvideo could not find page resource %q in %q" $srcParam .Page.File.Path -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $posterParam := .Get "poster" -}}
+{{- $poster := "" -}}
+
+{{- if $posterParam -}}
+  {{- if or (strings.HasPrefix $posterParam "http://") (strings.HasPrefix $posterParam "https://") -}}
+    {{- $poster = $posterParam -}}
+  {{- else -}}
+    {{- with .Page.Resources.GetMatch $posterParam -}}
+      {{- $poster = .RelPermalink -}}
+    {{- else -}}
+      {{- errorf "gifvideo could not find poster page resource %q in %q" $posterParam .Page.File.Path -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $alt := default "Animated video" (.Get "alt") -}}
+{{- $extraClass := default "" (.Get "class") -}}
+
+{{- $css := resources.Get "css/gifvideo.css" | minify | fingerprint -}}
+{{- $js := resources.Get "js/gifvideo.js" | minify | fingerprint -}}
+
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+
+<div
+  id="{{ $id }}"
+  class="gifvideo {{ $extraClass }}"
+  data-gifvideo
+>
+  <button
+    type="button"
+    class="gifvideo-trigger"
+    data-gifvideo-trigger
+    aria-label="Expand video: {{ $alt }}"
+    aria-controls="{{ $id }}-overlay"
+    aria-haspopup="dialog"
+  >
+    <video
+      class="gifvideo-inline"
+      data-gifvideo-inline
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="{{ $poster }}"
+      aria-label="{{ $alt }}"
+    >
+      <source src="{{ $src }}" type="video/webm">
+      Your browser does not support WebM video.
+    </video>
+
+    <span class="gifvideo-zoom-hint" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l-2-2m8 8l2 2m-8 0l-2 2m8-8l2-2"/>
+      </svg>
+    </span>
+  </button>
+
+  <div
+    id="{{ $id }}-overlay"
+    class="gifvideo-overlay"
+    data-gifvideo-overlay
+    hidden
+    aria-hidden="true"
+    tabindex="-1"
+    role="dialog"
+    aria-modal="true"
+    aria-label="{{ $alt }}"
+  >
+    <div class="gifvideo-dialog" data-gifvideo-dialog>
+      <button
+        type="button"
+        class="gifvideo-close"
+        data-gifvideo-close
+        aria-label="Close video"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+
+      <video
+        class="gifvideo-lightbox"
+        data-gifvideo-lightbox
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="{{ $poster }}"
+        aria-label="{{ $alt }}"
+      >
+        <source src="{{ $src }}" type="video/webm">
+        Your browser does not support WebM video.
+      </video>
+    </div>
+  </div>
+</div>
+
+<script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
