@@ -1,0 +1,15 @@
+{{ $lightPath := .Get "light" }}
+{{ $darkPath := .Get "dark" }}
+{{ $alt := .Get "alt" }}
+
+{{ $light := or (.Page.Resources.GetMatch $lightPath) (resources.Get $lightPath) }}
+{{ $dark := or (.Page.Resources.GetMatch $darkPath) (resources.Get $darkPath) }}
+
+<div>
+  {{ with $light }}
+    <img src="{{ .RelPermalink }}" class="block dark:hidden" alt="{{ $alt }}">
+  {{ end }}
+  {{ with $dark }}
+    <img src="{{ .RelPermalink }}" class="hidden dark:block" alt="{{ $alt }}">
+  {{ end }}
+</div>
