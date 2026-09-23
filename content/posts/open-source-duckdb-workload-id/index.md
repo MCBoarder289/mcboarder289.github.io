@@ -1,7 +1,7 @@
 ---
 title: "DuckDB Delta with Azure Workload Identity"
 date: 2026-09-20
-summary: "Walkthrough of my open source contributions to fg-data-profiling, a library that implements data profiling at scale with Spark."
+summary: "Bringing Azure's workload identity auth to DuckDB's Delta Extension, continuing the open source contributions series."
 tags: ["DuckDB", "Azure", "AKS", "data engineering"]
 categories: ["open source"]
 featureimage: "duckdb_aks_entra_textured.jpg"
@@ -63,7 +63,7 @@ The modern best-practice is to use a workload identity instead of some password 
 
 ### Workload Identity in AKS
 Azure provides the ability to define workload identities with permissions, and then assign those identities to AKS clusters.
-Instead of wiring in secrets with environment variables or manages secrets in KeyVault, all of which would need to be rotated manually, workload identities will manage and provision short-lived tokens automatically for us.
+Instead of wiring in secrets with environment variables or managing secrets in KeyVault, all of which would need to be rotated manually, workload identities will manage and provision short-lived tokens automatically for us.
 
 This means that we can have all of our AKS pods, such as our Dagster pipeline runs, using a particular workload identity with just the right access that it needs without having to wire in secrets or worry about rotation.
 It leverages [OpenID Connect (OIDC)](https://openid.net/developers/how-connect-works/), and is considered best practice for security.
@@ -85,7 +85,7 @@ CREATE SECRET az_wi (
 ```
 
 ## The Problem
-Most of our data lake uses [Delta Lake](https://docs.delta.io/) tables, which is an open table format the enables ACID transactions to our tables and is the default table format for [Spark](https://spark.apache.org/).
+Most of our data lake uses [Delta Lake](https://docs.delta.io/) tables, which is an open table format that enables ACID transactions and is the default table format for [Spark](https://spark.apache.org/).
 To read from those delta tables, DuckDB requires the [Delta Extension](https://duckdb.org/docs/lts/core_extensions/delta), which allows DuckDB to correctly navigate the format and read the metadata layer/delta logs efficiently.
 
 *This* is where we ran into issues.
@@ -176,9 +176,10 @@ Parquet -.-> ADLS
 DeltaTable -.-> ADLS
 {{< /mermaid >}}
 
-The reason that the parquet file query *just works* is because it's using that Azure SDK which already has full knowledge of how to handle workload_identity auth in the credential chain.
+The reason that the parquet file query *just works* is because it's using that Azure SDK which already has full knowledge of how to handle workload_identity auth in the credential chain. 
+The delta-kernel in Rust, on the other hand, requires specific variables to be written to its object_store.
 
-In fact, the [source code says that non-cli credential chain paths will just "hope for the best"](https://github.com/duckdb/duckdb-delta/blob/v1.4-andium/src/functions/delta_scan/delta_multi_file_list.cpp#L276-L284).
+In fact, the [duckdb-delta source code says that non-cli credential chain paths will just "hope for the best"](https://github.com/duckdb/duckdb-delta/blob/v1.4-andium/src/functions/delta_scan/delta_multi_file_list.cpp#L276-L284).
 That unfortunately didn't work so well given the workload identity path, because the three required environment variables were not placed into delta-kernel-rs's object_store.
 
 So let's fix that!
@@ -189,9 +190,9 @@ Here is [the PR for the fix](https://github.com/duckdb/duckdb-delta/pull/321), a
 {{< github-file-diff repo="duckdb/duckdb-delta" pr="321" file="src/functions/delta_scan/delta_multi_file_list.cpp" >}}
 
 All we needed was to grab the environment variables required by the workload identity and pass them through the constructor.
-The reviewer of my change also suggested we throw an error if we don't have all of those required variables which was a great suggestion.
+The reviewer of my change also suggested we throw an error if we don't have all of those required variables which was also a great suggestion.
 
-I also included my manual test that by default is skipped in their CI/CD processes so that we can verify the fix works manually.
+I included my manual test that by default is skipped in their CI/CD processes so that we can verify the fix works manually.
 The repo's CI/CD doesn't have federated workload identities, and that seemed unrealistic to coordinate for this PR.
 
 This proved to be useful so that we could test our final changes by doing the following:
