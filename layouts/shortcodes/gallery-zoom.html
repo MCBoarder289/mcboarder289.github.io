@@ -349,6 +349,16 @@
     -webkit-user-select: none;
     -webkit-user-drag: none;
   }
+
+  /* ============================================================
+     LIGHTBOX TOUCH BEHAVIOR
+     ============================================================ */
+  .gallery-zoom-image {
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+  }
 </style>
 
 <script>
@@ -574,6 +584,74 @@
           zoomCaption.hidden = true;
         }
       };
+
+      // ------------------------------------------------------------
+      // LIGHTBOX SWIPE
+      // Horizontal swipes navigate the lightbox.
+      // Vertical gestures are ignored.
+      // ------------------------------------------------------------
+      const lightboxSwipeThreshold = 50;
+      let lightboxTouchStartX = 0;
+      let lightboxTouchStartY = 0;
+      let lightboxTouchTracking = false;
+
+      zoomImage.addEventListener(
+        "touchstart",
+        (event) => {
+          if (overlay.hidden || event.touches.length !== 1) {
+            lightboxTouchTracking = false;
+            return;
+          }
+
+          const touch = event.touches[0];
+
+          lightboxTouchStartX = touch.clientX;
+          lightboxTouchStartY = touch.clientY;
+          lightboxTouchTracking = true;
+        },
+        { passive: true }
+      );
+
+      zoomImage.addEventListener(
+        "touchend",
+        (event) => {
+          if (
+            !lightboxTouchTracking ||
+            event.changedTouches.length !== 1
+          ) {
+            lightboxTouchTracking = false;
+            return;
+          }
+
+          lightboxTouchTracking = false;
+
+          const touch = event.changedTouches[0];
+          const deltaX = touch.clientX - lightboxTouchStartX;
+          const deltaY = touch.clientY - lightboxTouchStartY;
+
+          if (
+            Math.abs(deltaX) < lightboxSwipeThreshold ||
+            Math.abs(deltaX) <= Math.abs(deltaY)
+          ) {
+            return;
+          }
+
+          if (deltaX < 0) {
+            updateLightbox(currentIndex + 1);
+          } else {
+            updateLightbox(currentIndex - 1);
+          }
+        },
+        { passive: true }
+      );
+
+      zoomImage.addEventListener(
+        "touchcancel",
+        () => {
+          lightboxTouchTracking = false;
+        },
+        { passive: true }
+      );
 
       const openLightbox = (index) => {
         updateLightbox(index);
