@@ -1,0 +1,24 @@
+{{- $featured := where site.RegularPages "Params.featured" true -}}
+{{- $featured = sort $featured "Params.featuredOrder" "asc" -}}
+
+{{- if $featured -}}
+<section class="featured-home mt-10 w-full text-start">
+  <h2 class="mt-8 mb-10 text-2xl font-extrabold">
+    Featured
+  </h2>
+
+  {{ if site.Params.homepage.cardView }}
+    <div class="grid w-full gap-4 sm:grid-cols-2 md:grid-cols-3">
+      {{ range $featured }}
+        {{ partial "article-link/card.html" . }}
+      {{ end }}
+    </div>
+  {{ else }}
+    <section class="w-full space-y-10">
+      {{ range $featured }}
+        {{ partial "article-link/simple.html" . }}
+      {{ end }}
+    </section>
+  {{ end }}
+</section>
+{{- end -}}

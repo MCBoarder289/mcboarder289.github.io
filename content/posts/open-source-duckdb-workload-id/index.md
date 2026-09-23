@@ -11,6 +11,8 @@ heroStyle: thumbAndBackground
 series: 
   - "Open Source Contributions"
 series_order: 2
+#featured: true
+#featuredOrder: 1
 ---
 
 ## Intro

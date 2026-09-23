@@ -7,6 +7,8 @@ showReadingTime: false
 showWordCount: false
 showHero: false
 showTableOfContents: false
+#featured: true
+#featuredOrder: 2
 ---
 
 {{< feature-grid columns="1" >}}

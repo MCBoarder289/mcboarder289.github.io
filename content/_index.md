@@ -1,3 +1,5 @@
 ---
 title: "Michael Chapman"
 ---
+
+{{< featured >}}

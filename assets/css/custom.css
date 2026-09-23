@@ -231,3 +231,6 @@ html.dark {
   background-color: #1f2937; /* Tailwind gray-800 */
 }
 
+.prose:has(.featured-home) {
+  max-width: none !important;
+}
