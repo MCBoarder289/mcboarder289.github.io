@@ -9,7 +9,6 @@
 {{ $imagesTemp = strings.TrimSuffix "}" $imagesTemp }}
 {{ $imagesTemp := strings.Split $imagesTemp "," }}
 {{ $images := slice }}
-
 {{ range $imagesTemp }}
   {{ if or (strings.HasPrefix . "http:") (strings.HasPrefix . "https:") }}
     {{ $images = $images | append (dict "resource" (resources.GetRemote .) "key" .) }}
@@ -19,7 +18,6 @@
     {{ end }}
   {{ end }}
 {{ end }}
-
 {{ $captionsParam := .Get "captions" }}
 {{ $captions := dict }}
 {{ if $captionsParam }}
@@ -44,7 +42,6 @@
   data-gallery-carousel
   data-gallery-interval="{{ $interval }}"
 >
-
   <!-- Slide Indicators -->
   <div
     class="absolute bottom-0 left-0 right-0 z-20 mx-[15%] mb-4 flex list-none justify-center p-0"
@@ -73,6 +70,7 @@
       {{ if $resource }}
         {{ $candidates = $candidates | append $resource.Name (path.Base $resource.Name) $resource.RelPermalink (path.Base $resource.RelPermalink) }}
       {{ end }}
+
       {{ if $key }}
         {{ $candidates = $candidates | append $key (path.Base $key) }}
       {{ end }}
@@ -121,7 +119,11 @@
   </div>
 
   <!-- Navigation Arrows -->
-  <button class="absolute bottom-0 left-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-gallery-prev>
+  <button
+    class="absolute bottom-0 left-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90"
+    type="button"
+    data-gallery-prev
+  >
     <span class="inline-block h-8 w-8">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -135,7 +137,12 @@
     </span>
     <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Previous</span>
   </button>
-  <button class="absolute bottom-0 right-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90" type="button" data-gallery-next>
+
+  <button
+    class="absolute bottom-0 right-0 top-0 z-20 flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-neutral-400 dark:text-neutral-500 opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:opacity-90 focus:opacity-90"
+    type="button"
+    data-gallery-next
+  >
     <span class="inline-block h-8 w-8">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -176,15 +183,29 @@
       const root = document.getElementById("{{ $id }}");
       if (!root) return;
 
-      const items = Array.from(root.querySelectorAll("[data-gallery-carousel-item]"));
-      const captions = items.map((item) => item.querySelector("figcaption")).filter((caption) => caption);
+      const items = Array.from(
+        root.querySelectorAll("[data-gallery-carousel-item]")
+      );
+
+      const captions = items
+        .map((item) => item.querySelector("figcaption"))
+        .filter((caption) => caption);
+
       if (captions.length < 2) return;
 
       const measureAndFixCaptionHeight = () => {
-        const hiddenItems = items.filter((item) => item.classList.contains("hidden"));
+        const hiddenItems = items.filter((item) =>
+          item.classList.contains("hidden")
+        );
 
         hiddenItems.forEach((item) => item.classList.remove("hidden"));
-        const maxHeight = Math.max(...captions.map((caption) => Math.ceil(caption.getBoundingClientRect().height)));
+
+        const maxHeight = Math.max(
+          ...captions.map((caption) =>
+            Math.ceil(caption.getBoundingClientRect().height)
+          )
+        );
+
         hiddenItems.forEach((item) => item.classList.add("hidden"));
 
         captions.forEach((caption) => {
@@ -300,12 +321,33 @@
     transform: translateY(-50%);
   }
 
-  .gallery-zoom-prev { left: 1rem; }
-  .gallery-zoom-next { right: 1rem; }
+  .gallery-zoom-prev {
+    left: 1rem;
+  }
+
+  .gallery-zoom-next {
+    right: 1rem;
+  }
 
   @media (max-width: 640px) {
-    .gallery-zoom-figure { padding: 3.5rem 2.5rem; }
-    .gallery-zoom-prev, .gallery-zoom-next { font-size: 2rem; }
+    .gallery-zoom-figure {
+      padding: 3.5rem 2.5rem;
+    }
+
+    .gallery-zoom-prev,
+    .gallery-zoom-next {
+      font-size: 2rem;
+    }
+  }
+
+  /* ============================================================
+     INLINE CAROUSEL TOUCH BEHAVIOR
+     ============================================================ */
+  [data-gallery-carousel] [data-gallery-zoom-index] {
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
   }
 </style>
 
@@ -330,12 +372,15 @@
       // indicators, and active-slide state are deterministic.
       // ------------------------------------------------------------
       const carouselTrack = root.querySelector(".gallery-carousel-track");
+
       const carouselItems = Array.from(
         root.querySelectorAll("[data-gallery-carousel-item]")
       );
+
       const carouselIndicators = Array.from(
         root.querySelectorAll("[data-gallery-slide-to]")
       );
+
       const carouselPrev = root.querySelector("[data-gallery-prev]");
       const carouselNext = root.querySelector("[data-gallery-next]");
 
@@ -378,6 +423,7 @@
 
           indicator.classList.toggle("opacity-100", active);
           indicator.classList.toggle("opacity-50", !active);
+
           indicator.setAttribute(
             "aria-current",
             active ? "true" : "false"
@@ -417,6 +463,80 @@
         nextCarousel();
       });
 
+      // ------------------------------------------------------------
+      // INLINE CAROUSEL SWIPE
+      // Horizontal swipes navigate the carousel.
+      // Vertical gestures continue to scroll the page normally.
+      // ------------------------------------------------------------
+      const swipeThreshold = 50;
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchTracking = false;
+      let lastCarouselSwipeAt = 0;
+
+      carouselItems.forEach((item) => {
+        const image = item.querySelector("[data-gallery-zoom-index]");
+        if (!image) return;
+
+        image.addEventListener(
+          "touchstart",
+          (event) => {
+            if (event.touches.length !== 1) {
+              touchTracking = false;
+              return;
+            }
+
+            const touch = event.touches[0];
+
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchTracking = true;
+          },
+          { passive: true }
+        );
+
+        image.addEventListener(
+          "touchend",
+          (event) => {
+            if (!touchTracking || event.changedTouches.length !== 1) {
+              touchTracking = false;
+              return;
+            }
+
+            touchTracking = false;
+
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            // Ignore short movements and primarily-vertical gestures.
+            if (
+              Math.abs(deltaX) < swipeThreshold ||
+              Math.abs(deltaX) <= Math.abs(deltaY)
+            ) {
+              return;
+            }
+
+            lastCarouselSwipeAt = Date.now();
+
+            if (deltaX < 0) {
+              nextCarousel();
+            } else {
+              prevCarousel();
+            }
+          },
+          { passive: true }
+        );
+
+        image.addEventListener(
+          "touchcancel",
+          () => {
+            touchTracking = false;
+          },
+          { passive: true }
+        );
+      });
+
       updateCarousel(0, false);
       startCarouselTimer();
 
@@ -429,17 +549,24 @@
 
       const updateLightbox = (index) => {
         if (!items.length) return;
-        currentIndex = (index + items.length) % items.length;
-        const item = items[currentIndex];
 
-        const sourceImage = item.querySelector("[data-gallery-zoom-index]");
+        currentIndex = (index + items.length) % items.length;
+
+        const item = items[currentIndex];
+        const sourceImage = item.querySelector(
+          "[data-gallery-zoom-index]"
+        );
         const sourceCaption = item.querySelector("figcaption");
+
         if (!sourceImage) return;
 
         zoomImage.src = sourceImage.currentSrc || sourceImage.src;
         zoomImage.alt = sourceImage.alt || "";
 
-        if (sourceCaption && sourceCaption.textContent.trim() !== "") {
+        if (
+          sourceCaption &&
+          sourceCaption.textContent.trim() !== ""
+        ) {
           zoomCaption.innerHTML = sourceCaption.innerHTML;
           zoomCaption.hidden = false;
         } else {
@@ -458,9 +585,11 @@
 
       const closeLightbox = () => {
         if (overlay.hidden) return;
+
         overlay.hidden = true;
         overlay.setAttribute("aria-hidden", "true");
         document.body.style.overflow = previousBodyOverflow;
+
         zoomImage.removeAttribute("src");
         zoomImage.alt = "";
         zoomCaption.innerHTML = "";
@@ -470,9 +599,18 @@
       items.forEach((item, index) => {
         const image = item.querySelector("[data-gallery-zoom-index]");
         if (!image) return;
+
         image.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
+
+          // A touch swipe may generate a click event immediately after
+          // touchend. Suppress that click so a swipe does not open
+          // the lightbox accidentally.
+          if (Date.now() - lastCarouselSwipeAt < 500) {
+            return;
+          }
+
           openLightbox(index);
         });
       });
@@ -511,16 +649,19 @@
 
       document.addEventListener("keydown", (event) => {
         if (overlay.hidden) return;
+
         if (event.key === "Escape") {
           event.preventDefault();
           closeLightbox();
           return;
         }
+
         if (event.key === "ArrowLeft") {
           event.preventDefault();
           updateLightbox(currentIndex - 1);
           return;
         }
+
         if (event.key === "ArrowRight") {
           event.preventDefault();
           updateLightbox(currentIndex + 1);

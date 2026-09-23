@@ -205,7 +205,7 @@ Here is what that initial profile looks like when run with a pandas dataframe:
 
 {{< gallery-zoom 
   images="{pandas_first.png,pandas_second.png}" 
-  interval="5000" 
+  interval="0" 
   aspectRatio="4-3" 
   captions="{pandas_first.png:double column profile in `pandas`,pandas_second.png:double column profile in `pandas` (common values)}">}}
 
@@ -214,7 +214,7 @@ But here is what that same dataset looked like when profiled in Spark:
 
 {{< gallery-zoom 
   images="spark_first_broken.png,spark_second_broken.png}" 
-  interval="5000" 
+  interval="0" 
   aspectRatio="4-3" 
   captions="{spark_first_broken.png:double column profile in `Spark`,spark_second_broken.png:double column profile in `Spark` (common values)}">}}
 
@@ -370,13 +370,13 @@ With all of these fixes, Spark's output is now correctly matching the original p
 
 {{< gallery-zoom 
   images="{pandas_first.png,spark_first_fixed.png}" 
-  interval="5000" 
+  interval="0" 
   aspectRatio="4-3" 
   captions="{pandas_first.png:double column profile in `pandas`,spark_first_fixed.png:double column profile in `Spark`}">}}
 
 {{< gallery-zoom 
   images="{pandas_second.png,spark_second_fixed.png}" 
-  interval="5000" 
+  interval="0" 
   aspectRatio="4-3" 
   captions="{pandas_second.png:double column profile in `pandas` (common values),spark_second_fixed.png:double column profile in `Spark` (common values)">}}
 
