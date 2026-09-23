@@ -354,10 +354,12 @@
      LIGHTBOX TOUCH BEHAVIOR
      ============================================================ */
   .gallery-zoom-image {
-    touch-action: pan-y;
+    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
     -webkit-user-drag: none;
+    transform-origin: center center;
+    will-change: transform;
   }
 </style>
 
@@ -562,6 +564,8 @@
 
         currentIndex = (index + items.length) % items.length;
 
+        resetLightboxZoom();
+
         const item = items[currentIndex];
         const sourceImage = item.querySelector(
           "[data-gallery-zoom-index]"
@@ -586,71 +590,350 @@
       };
 
       // ------------------------------------------------------------
-      // LIGHTBOX SWIPE
-      // Horizontal swipes navigate the lightbox.
-      // Vertical gestures are ignored.
+      // LIGHTBOX GESTURES
+      // 1 finger at 1x  -> swipe between images
+      // 2 pointers      -> pinch to zoom
+      // 1 pointer > 1x  -> pan the zoomed image
+      // Wheel/trackpad  -> zoom fallback for desktop/devtools
       // ------------------------------------------------------------
+      const MIN_LIGHTBOX_ZOOM = 1;
+      const MAX_LIGHTBOX_ZOOM = 4;
       const lightboxSwipeThreshold = 50;
+
+      let zoomScale = MIN_LIGHTBOX_ZOOM;
+      let zoomX = 0;
+      let zoomY = 0;
+
+      const activePointers = new Map();
+      let lightboxGesture = null;
       let lightboxTouchStartX = 0;
       let lightboxTouchStartY = 0;
-      let lightboxTouchTracking = false;
+
+      // Chrome DevTools can emulate pinch with Shift + mouse drag.
+      // In that mode the image can receive a mouse PointerEvent rather
+      // than a touch/pen pointer, so keep a dedicated zoom state for it.
+      let devtoolsZoomPointerId = null;
+      let devtoolsZoomStartY = 0;
+      let devtoolsZoomStartScale = MIN_LIGHTBOX_ZOOM;
+
+      let pinchStartDistance = 0;
+      let pinchStartScale = MIN_LIGHTBOX_ZOOM;
+
+      let panStartX = 0;
+      let panStartY = 0;
+      let panOriginX = 0;
+      let panOriginY = 0;
+
+      const applyLightboxTransform = () => {
+        zoomImage.style.transform =
+          `translate3d(${zoomX}px, ${zoomY}px, 0) scale(${zoomScale})`;
+      };
+
+      const resetLightboxZoom = () => {
+        zoomScale = MIN_LIGHTBOX_ZOOM;
+        zoomX = 0;
+        zoomY = 0;
+        lightboxGesture = null;
+        pinchStartDistance = 0;
+        activePointers.clear();
+
+        zoomImage.style.transform =
+          "translate3d(0, 0, 0) scale(1)";
+      };
+
+      const getPointerDistance = () => {
+        const pointers = Array.from(activePointers.values());
+        if (pointers.length < 2) return 0;
+
+        const dx = pointers[0].x - pointers[1].x;
+        const dy = pointers[0].y - pointers[1].y;
+
+        return Math.hypot(dx, dy);
+      };
+
+      const clampLightboxPan = () => {
+        if (zoomScale <= MIN_LIGHTBOX_ZOOM) {
+          zoomX = 0;
+          zoomY = 0;
+          return;
+        }
+
+        const figure = overlay.querySelector(".gallery-zoom-figure");
+        if (!figure) return;
+
+        const figureRect = figure.getBoundingClientRect();
+        const imageWidth = zoomImage.offsetWidth * zoomScale;
+        const imageHeight = zoomImage.offsetHeight * zoomScale;
+
+        const maxX = Math.max(0, (imageWidth - figureRect.width) / 2);
+        const maxY = Math.max(0, (imageHeight - figureRect.height) / 2);
+
+        zoomX = Math.min(maxX, Math.max(-maxX, zoomX));
+        zoomY = Math.min(maxY, Math.max(-maxY, zoomY));
+      };
+
+      const zoomBy = (factor, centerX = null, centerY = null) => {
+        const previousScale = zoomScale;
+
+        zoomScale = Math.min(
+          MAX_LIGHTBOX_ZOOM,
+          Math.max(MIN_LIGHTBOX_ZOOM, zoomScale * factor)
+        );
+
+        if (zoomScale <= MIN_LIGHTBOX_ZOOM) {
+          resetLightboxZoom();
+          return;
+        }
+
+        // Keep the point underneath the fingers/cursor roughly stationary
+        // while zooming. This makes both pinch and DevTools zoom feel natural.
+        if (
+          centerX !== null &&
+          centerY !== null &&
+          previousScale > 0
+        ) {
+          const figure = overlay.querySelector(".gallery-zoom-figure");
+          const rect = figure?.getBoundingClientRect();
+
+          if (rect) {
+            const factorFromScale = zoomScale / previousScale;
+            const originX = centerX - (rect.left + rect.width / 2);
+            const originY = centerY - (rect.top + rect.height / 2);
+
+            zoomX -= originX * (factorFromScale - 1);
+            zoomY -= originY * (factorFromScale - 1);
+          }
+        }
+
+        clampLightboxPan();
+        applyLightboxTransform();
+      };
 
       zoomImage.addEventListener(
-        "touchstart",
+        "pointerdown",
         (event) => {
-          if (overlay.hidden || event.touches.length !== 1) {
-            lightboxTouchTracking = false;
+          if (overlay.hidden) return;
+
+          // Chrome DevTools mobile emulation can represent its
+          // Shift + drag pinch gesture as a mouse pointer on the image.
+          // Treat upward/downward Shift-drag as zoom so the image behaves
+          // the same way as the black lightbox backdrop.
+          if (event.pointerType === "mouse") {
+            if (!event.shiftKey) return;
+
+            event.preventDefault();
+
+            lightboxGesture = "devtools-zoom";
+            devtoolsZoomPointerId = event.pointerId;
+            devtoolsZoomStartY = event.clientY;
+            devtoolsZoomStartScale = zoomScale;
+
+            zoomImage.setPointerCapture?.(event.pointerId);
             return;
           }
 
-          const touch = event.touches[0];
+          activePointers.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+          });
 
-          lightboxTouchStartX = touch.clientX;
-          lightboxTouchStartY = touch.clientY;
-          lightboxTouchTracking = true;
-        },
-        { passive: true }
+          zoomImage.setPointerCapture?.(event.pointerId);
+
+          if (activePointers.size === 2) {
+            lightboxGesture = "pinch";
+            pinchStartDistance = getPointerDistance();
+            pinchStartScale = zoomScale;
+            return;
+          }
+
+          if (activePointers.size !== 1) {
+            lightboxGesture = null;
+            return;
+          }
+
+          if (zoomScale > MIN_LIGHTBOX_ZOOM) {
+            lightboxGesture = "pan";
+            panStartX = event.clientX;
+            panStartY = event.clientY;
+            panOriginX = zoomX;
+            panOriginY = zoomY;
+            return;
+          }
+
+          lightboxGesture = "swipe";
+          lightboxTouchStartX = event.clientX;
+          lightboxTouchStartY = event.clientY;
+        }
       );
 
       zoomImage.addEventListener(
-        "touchend",
+        "pointermove",
         (event) => {
+          if (overlay.hidden) return;
+
           if (
-            !lightboxTouchTracking ||
-            event.changedTouches.length !== 1
+            lightboxGesture === "devtools-zoom" &&
+            event.pointerId === devtoolsZoomPointerId
           ) {
-            lightboxTouchTracking = false;
+            event.preventDefault();
+
+            // Upward drag increases zoom; downward drag decreases it.
+            const deltaY = devtoolsZoomStartY - event.clientY;
+            zoomScale = Math.min(
+              MAX_LIGHTBOX_ZOOM,
+              Math.max(
+                MIN_LIGHTBOX_ZOOM,
+                devtoolsZoomStartScale * Math.pow(1.005, deltaY)
+              )
+            );
+
+            if (zoomScale <= MIN_LIGHTBOX_ZOOM) {
+              resetLightboxZoom();
+              return;
+            }
+
+            clampLightboxPan();
+            applyLightboxTransform();
             return;
           }
 
-          lightboxTouchTracking = false;
+          if (!activePointers.has(event.pointerId)) return;
 
-          const touch = event.changedTouches[0];
-          const deltaX = touch.clientX - lightboxTouchStartX;
-          const deltaY = touch.clientY - lightboxTouchStartY;
+          activePointers.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+          });
 
           if (
-            Math.abs(deltaX) < lightboxSwipeThreshold ||
-            Math.abs(deltaX) <= Math.abs(deltaY)
+            lightboxGesture === "pinch" &&
+            activePointers.size >= 2
           ) {
+            const distance = getPointerDistance();
+
+            if (!pinchStartDistance) return;
+
+            zoomScale = Math.min(
+              MAX_LIGHTBOX_ZOOM,
+              Math.max(
+                MIN_LIGHTBOX_ZOOM,
+                pinchStartScale * (distance / pinchStartDistance)
+              )
+            );
+
+            if (zoomScale <= MIN_LIGHTBOX_ZOOM) {
+              resetLightboxZoom();
+              return;
+            }
+
+            clampLightboxPan();
+            applyLightboxTransform();
             return;
           }
 
-          if (deltaX < 0) {
-            updateLightbox(currentIndex + 1);
-          } else {
-            updateLightbox(currentIndex - 1);
+          if (
+            lightboxGesture === "pan" &&
+            activePointers.size === 1 &&
+            zoomScale > MIN_LIGHTBOX_ZOOM
+          ) {
+            zoomX = panOriginX + (event.clientX - panStartX);
+            zoomY = panOriginY + (event.clientY - panStartY);
+
+            clampLightboxPan();
+            applyLightboxTransform();
           }
-        },
-        { passive: true }
+        }
       );
 
+      const finishPointer = (event) => {
+        const wasDevtoolsZoom =
+          lightboxGesture === "devtools-zoom" &&
+          event.pointerId === devtoolsZoomPointerId;
+
+        const wasSwipe =
+          lightboxGesture === "swipe" &&
+          activePointers.size === 1 &&
+          activePointers.has(event.pointerId);
+
+        if (wasDevtoolsZoom) {
+          devtoolsZoomPointerId = null;
+          lightboxGesture = null;
+
+          try {
+            zoomImage.releasePointerCapture?.(event.pointerId);
+          } catch {
+            // Pointer capture may already have been released.
+          }
+
+          return;
+        }
+
+        activePointers.delete(event.pointerId);
+
+        if (wasSwipe && activePointers.size === 0) {
+          const deltaX = event.clientX - lightboxTouchStartX;
+          const deltaY = event.clientY - lightboxTouchStartY;
+
+          if (
+            Math.abs(deltaX) >= lightboxSwipeThreshold &&
+            Math.abs(deltaX) > Math.abs(deltaY)
+          ) {
+            if (deltaX < 0) {
+              updateLightbox(currentIndex + 1);
+            } else {
+              updateLightbox(currentIndex - 1);
+            }
+          }
+        }
+
+        if (activePointers.size === 1 && zoomScale > MIN_LIGHTBOX_ZOOM) {
+          const remaining = Array.from(activePointers.values())[0];
+
+          lightboxGesture = "pan";
+          panStartX = remaining.x;
+          panStartY = remaining.y;
+          panOriginX = zoomX;
+          panOriginY = zoomY;
+        } else if (activePointers.size === 0) {
+          lightboxGesture = null;
+          pinchStartDistance = 0;
+
+          if (zoomScale <= MIN_LIGHTBOX_ZOOM) {
+            resetLightboxZoom();
+          }
+        }
+      };
+
+      zoomImage.addEventListener("pointerup", finishPointer);
+      zoomImage.addEventListener("pointercancel", finishPointer);
+      zoomImage.addEventListener("pointerleave", (event) => {
+        // Pointer capture normally keeps the interaction on the image,
+        // so this is only a cleanup path for browsers that release it.
+        if (!zoomImage.hasPointerCapture?.(event.pointerId)) {
+          finishPointer(event);
+        }
+      });
+
+      // ------------------------------------------------------------
+      // Desktop / Chrome DevTools pinch fallback.
+      // Trackpad pinch gestures are reported as wheel events with
+      // ctrlKey=true. Chrome DevTools' Shift-drag pinch can also be
+      // represented through this path depending on the emulation mode.
+      // ------------------------------------------------------------
       zoomImage.addEventListener(
-        "touchcancel",
-        () => {
-          lightboxTouchTracking = false;
+        "wheel",
+        (event) => {
+          if (overlay.hidden) return;
+
+          if (!event.ctrlKey && !event.shiftKey) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const factor = Math.pow(1.01, -event.deltaY);
+
+          zoomBy(factor, event.clientX, event.clientY);
         },
-        { passive: true }
+        { passive: false }
       );
 
       const openLightbox = (index) => {
