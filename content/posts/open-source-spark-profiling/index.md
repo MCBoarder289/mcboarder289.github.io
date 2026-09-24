@@ -237,7 +237,7 @@ Let's walk through each of the main problems and their solutions based on the ke
 To fix the flat distribution of distinct values, here are the relevant code changes:
 {{< github-file-diff repo="Data-Centric-AI-Community/fg-data-profiling" pr="1800" file="src/ydata_profiling/model/spark/describe_counts_spark.py" >}}
 
-The problem here in the original code the produces the profile for a single column.
+The problem here was in the original code that produces the profile for a single column.
 It was running a count on **an already aggregated dataframe**:
 
 ```python {hl_lines=[10, 18]}
