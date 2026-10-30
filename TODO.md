@@ -8,7 +8,7 @@
 ### Open Source Series
 * [x] fg-dataprofiling
   
-* [ ] duckdb-delta - workload identity feature:
+* [x] duckdb-delta - workload identity feature:
   * [PR](https://github.com/duckdb/duckdb-delta/pulls?q=is%3Apr+state%3Aclosed+author%3AMCBoarder289)
   * [Issue](https://github.com/duckdb/duckdb-delta/issues/320)
 
@@ -16,7 +16,7 @@
   * [Issue](https://github.com/graphframes/graphframes/issues/889)
   * [PR](https://github.com/graphframes/graphframes/pull/890)
 
-* [ ] dagster-authkit
+* [x] dagster-authkit
   * [PRs](https://github.com/maltzsama/dagster-authkit/pulls?q=is%3Apr+state%3Aclosed+author%3AMCBoarder289)
 
 * [ ] agentsview
